@@ -40,7 +40,6 @@
             <svg id="cableLayer" class="cable-layer"></svg>
             <div id="gridCells" class="grid-cells"></div>
           </div>
-          <aside id="flowLegend" class="flow-legend"></aside>
         </div>
       </article>
     </section>
@@ -64,14 +63,22 @@
         <span class="buy-title">Recursos</span>
         <button id="buyMinerTypeBtn">Pedra</button>
         <button id="buyWoodMinerTypeBtn">Fusta</button>
+        <button id="buySandMinerTypeBtn">Sorra</button>
+        <button id="buyWaterMinerTypeBtn">Aigua</button>
         <button id="buyIronMinerTypeBtn">Fe</button>
         <button id="buyCoalMinerTypeBtn">Carb</button>
         <button id="buyCopperMinerTypeBtn">Cu</button>
+        <button id="buyOilMinerTypeBtn">Pet</button>
+        <button id="buyAluminumMinerTypeBtn">Al</button>
         <span>P: <strong id="minerCostValue">0$</strong></span>
         <span>Fu: <strong id="woodMinerCostValue">0$</strong></span>
+        <span>So: <strong id="sandMinerCostValue">0$</strong></span>
+        <span>Ai: <strong id="waterMinerCostValue">0$</strong></span>
         <span>Fe: <strong id="ironMinerCostValue">-</strong></span>
         <span>Ca: <strong id="coalMinerCostValue">-</strong></span>
         <span>Cu: <strong id="copperMinerCostValue">-</strong></span>
+        <span>Pt: <strong id="oilMinerCostValue">-</strong></span>
+        <span>Al: <strong id="aluminumMinerCostValue">-</strong></span>
       </div>
       <div class="buy-picker">
         <span class="buy-title">Maquines</span>
@@ -109,6 +116,7 @@
         <button id="openTutorialBtn">Tutorial</button>
         <button id="resetPersistenceBtn">Reinici</button>
       </div>
+      <div id="flowLegend" class="flow-legend"></div>
       <details class="contract-box">
         <summary>Contracte</summary>
         <div id="contractOffer" class="contract-block"></div>

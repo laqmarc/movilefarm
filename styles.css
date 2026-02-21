@@ -288,19 +288,13 @@ h2 {
 }
 
 .flow-legend {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 6;
-  pointer-events: none;
-  min-width: 150px;
-  max-width: min(52vw, 250px);
+  margin-top: 8px;
+  width: 100%;
   border-radius: 10px;
   border: 1px solid rgba(23, 59, 47, 0.2);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 20px rgba(23, 59, 47, 0.16);
+  background: #f3faf6;
   padding: 6px;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   color: var(--ink);
 }
 
@@ -397,6 +391,14 @@ h2 {
   background: linear-gradient(145deg, #7f5a3a, #5f4128);
 }
 
+.tile.sand_miner {
+  background: linear-gradient(145deg, #b69359, #8f7240);
+}
+
+.tile.water_miner {
+  background: linear-gradient(145deg, #4d86a9, #366a88);
+}
+
 .tile.iron_miner {
   background: linear-gradient(145deg, #4f6d8b, #3b536d);
 }
@@ -407,6 +409,14 @@ h2 {
 
 .tile.copper_miner {
   background: linear-gradient(145deg, #aa6746, #8d5136);
+}
+
+.tile.oil_miner {
+  background: linear-gradient(145deg, #4e4a58, #34313c);
+}
+
+.tile.aluminum_miner {
+  background: linear-gradient(145deg, #7e8f9f, #5f7182);
 }
 
 .tile.forge {
@@ -474,15 +484,26 @@ h2 {
 
 .cable-line.flow-stone { stroke: #6f7f8f; }
 .cable-line.flow-wood { stroke: #8a6a48; }
+.cable-line.flow-sand { stroke: #b69359; }
+.cable-line.flow-water { stroke: #4d86a9; }
 .cable-line.flow-iron { stroke: #53779d; }
 .cable-line.flow-coal { stroke: #55595f; }
 .cable-line.flow-copper { stroke: #b06a48; }
+.cable-line.flow-oil { stroke: #5f5a6f; }
+.cable-line.flow-aluminum { stroke: #8191a1; }
 .cable-line.flow-parts { stroke: #8e5a7f; }
 .cable-line.flow-steel { stroke: #648189; }
 .cable-line.flow-plates { stroke: #56a1a1; }
+.cable-line.flow-silicon { stroke: #4ea8b4; }
+.cable-line.flow-plastic { stroke: #4aa07f; }
+.cable-line.flow-steam { stroke: #6f8fd1; }
 .cable-line.flow-modules { stroke: #3d8b5c; }
 .cable-line.flow-circuits { stroke: #3f9f7b; }
 .cable-line.flow-frames { stroke: #7b8b4a; }
+.cable-line.flow-rubber { stroke: #7a6b53; }
+.cable-line.flow-wiring { stroke: #d08b47; }
+.cable-line.flow-microchips { stroke: #4a8f6f; }
+.cable-line.flow-batteries { stroke: #6b84c9; }
 
 .cable-preview {
   stroke: #50a8ff;
@@ -818,10 +839,6 @@ button:disabled {
   }
 
   .flow-legend {
-    top: 6px;
-    right: 6px;
-    min-width: 132px;
-    max-width: 56vw;
     padding: 5px;
     font-size: 0.69rem;
   }

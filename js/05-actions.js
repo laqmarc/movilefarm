@@ -37,7 +37,12 @@ function setBuildType(type) {
   }
 
   if (
-    (type === "coal_miner" || type === "copper_miner") &&
+    (
+      type === "coal_miner" ||
+      type === "copper_miner" ||
+      type === "oil_miner" ||
+      type === "aluminum_miner"
+    ) &&
     !state.tech.advancedMinesUnlocked
   ) {
     showToast("Desbloqueja mines avancades");
@@ -58,9 +63,13 @@ function setBuildType(type) {
   if (
     state.ui.mode === "build_miner" ||
     state.ui.mode === "build_wood_miner" ||
+    state.ui.mode === "build_sand_miner" ||
+    state.ui.mode === "build_water_miner" ||
     state.ui.mode === "build_iron_miner" ||
     state.ui.mode === "build_coal_miner" ||
     state.ui.mode === "build_copper_miner" ||
+    state.ui.mode === "build_oil_miner" ||
+    state.ui.mode === "build_aluminum_miner" ||
     state.ui.mode === "build_forge" ||
     state.ui.mode === "build_assembler" ||
     state.ui.mode === "build_pole"
@@ -68,8 +77,12 @@ function setBuildType(type) {
     if (type === "pole") setMode("build_pole");
     else if (type === "assembler") setMode("build_assembler");
     else if (type === "forge") setMode("build_forge");
+    else if (type === "aluminum_miner") setMode("build_aluminum_miner");
+    else if (type === "oil_miner") setMode("build_oil_miner");
     else if (type === "copper_miner") setMode("build_copper_miner");
     else if (type === "coal_miner") setMode("build_coal_miner");
+    else if (type === "water_miner") setMode("build_water_miner");
+    else if (type === "sand_miner") setMode("build_sand_miner");
     else if (type === "wood_miner") setMode("build_wood_miner");
     else if (type === "iron_miner") setMode("build_iron_miner");
     else setMode("build_miner");
@@ -87,6 +100,16 @@ function enterBuyMode() {
     return;
   }
 
+  if (state.ui.buyType === "sand_miner") {
+    setMode("build_sand_miner");
+    return;
+  }
+
+  if (state.ui.buyType === "water_miner") {
+    setMode("build_water_miner");
+    return;
+  }
+
   if (state.ui.buyType === "assembler" && state.tech.assemblerUnlocked) {
     setMode("build_assembler");
     return;
@@ -99,6 +122,16 @@ function enterBuyMode() {
 
   if (state.ui.buyType === "copper_miner" && state.tech.advancedMinesUnlocked) {
     setMode("build_copper_miner");
+    return;
+  }
+
+  if (state.ui.buyType === "oil_miner" && state.tech.advancedMinesUnlocked) {
+    setMode("build_oil_miner");
+    return;
+  }
+
+  if (state.ui.buyType === "aluminum_miner" && state.tech.advancedMinesUnlocked) {
+    setMode("build_aluminum_miner");
     return;
   }
 
@@ -150,6 +183,38 @@ function placeNode(type, row, col) {
     state.progression.nodesBuilt += 1;
     state.ui.selectedNodeId = id;
     showToast("Miner fusta colocat");
+    return;
+  }
+
+  if (type === "sand_miner") {
+    const cost = sandMinerPlacementCost();
+    if (!spendMoney(cost)) {
+      showToast("No tens prou diners");
+      return;
+    }
+
+    const id = `sand-miner-${state.nextSandMinerId}`;
+    state.nextSandMinerId += 1;
+    state.nodes.push({ id, type: "sand_miner", row, col, level: 1, fixed: false });
+    state.progression.nodesBuilt += 1;
+    state.ui.selectedNodeId = id;
+    showToast("Miner sorra colocat");
+    return;
+  }
+
+  if (type === "water_miner") {
+    const cost = waterMinerPlacementCost();
+    if (!spendMoney(cost)) {
+      showToast("No tens prou diners");
+      return;
+    }
+
+    const id = `water-miner-${state.nextWaterMinerId}`;
+    state.nextWaterMinerId += 1;
+    state.nodes.push({ id, type: "water_miner", row, col, level: 1, fixed: false });
+    state.progression.nodesBuilt += 1;
+    state.ui.selectedNodeId = id;
+    showToast("Extractor aigua colocat");
     return;
   }
 
@@ -213,6 +278,48 @@ function placeNode(type, row, col) {
     state.progression.nodesBuilt += 1;
     state.ui.selectedNodeId = id;
     showToast("Miner coure colocat");
+    return;
+  }
+
+  if (type === "oil_miner") {
+    if (!state.tech.advancedMinesUnlocked) {
+      showToast("Mines avancades no desbloquejades");
+      return;
+    }
+
+    const cost = oilMinerPlacementCost();
+    if (!spendMoney(cost)) {
+      showToast("No tens prou diners");
+      return;
+    }
+
+    const id = `oil-miner-${state.nextOilMinerId}`;
+    state.nextOilMinerId += 1;
+    state.nodes.push({ id, type: "oil_miner", row, col, level: 1, fixed: false });
+    state.progression.nodesBuilt += 1;
+    state.ui.selectedNodeId = id;
+    showToast("Pou petroli colocat");
+    return;
+  }
+
+  if (type === "aluminum_miner") {
+    if (!state.tech.advancedMinesUnlocked) {
+      showToast("Mines avancades no desbloquejades");
+      return;
+    }
+
+    const cost = aluminumMinerPlacementCost();
+    if (!spendMoney(cost)) {
+      showToast("No tens prou diners");
+      return;
+    }
+
+    const id = `aluminum-miner-${state.nextAluminumMinerId}`;
+    state.nextAluminumMinerId += 1;
+    state.nodes.push({ id, type: "aluminum_miner", row, col, level: 1, fixed: false });
+    state.progression.nodesBuilt += 1;
+    state.ui.selectedNodeId = id;
+    showToast("Miner alumini colocat");
     return;
   }
 
@@ -366,6 +473,18 @@ function onGridTap(row, col) {
     return;
   }
 
+  if (state.ui.mode === "build_sand_miner") {
+    placeNode("sand_miner", row, col);
+    render();
+    return;
+  }
+
+  if (state.ui.mode === "build_water_miner") {
+    placeNode("water_miner", row, col);
+    render();
+    return;
+  }
+
   if (state.ui.mode === "build_iron_miner") {
     placeNode("iron_miner", row, col);
     render();
@@ -380,6 +499,18 @@ function onGridTap(row, col) {
 
   if (state.ui.mode === "build_copper_miner") {
     placeNode("copper_miner", row, col);
+    render();
+    return;
+  }
+
+  if (state.ui.mode === "build_oil_miner") {
+    placeNode("oil_miner", row, col);
+    render();
+    return;
+  }
+
+  if (state.ui.mode === "build_aluminum_miner") {
+    placeNode("aluminum_miner", row, col);
     render();
     return;
   }
@@ -771,15 +902,26 @@ function canCycleRecipe(node) {
 function recipeResourceLabel(resourceKey) {
   if (resourceKey === "stone") return "Pedra";
   if (resourceKey === "wood") return "Fusta";
+  if (resourceKey === "sand") return "Sorra";
+  if (resourceKey === "water") return "Aigua";
   if (resourceKey === "iron") return "Ferro";
   if (resourceKey === "coal") return "Carbo";
   if (resourceKey === "copper") return "Coure";
+  if (resourceKey === "oil") return "Petroli";
+  if (resourceKey === "aluminum") return "Alumini";
   if (resourceKey === "parts") return "Peces";
   if (resourceKey === "steel") return "Acer";
   if (resourceKey === "plates") return "Plaques";
+  if (resourceKey === "silicon") return "Silici";
+  if (resourceKey === "plastic") return "Plastic";
+  if (resourceKey === "steam") return "Vapor";
   if (resourceKey === "modules") return "Moduls";
   if (resourceKey === "circuits") return "Circuits";
   if (resourceKey === "frames") return "Bastidors";
+  if (resourceKey === "rubber") return "Goma";
+  if (resourceKey === "wiring") return "Cablejat";
+  if (resourceKey === "microchips") return "Microxips";
+  if (resourceKey === "batteries") return "Bateries";
   return resourceKey;
 }
 
@@ -1024,6 +1166,8 @@ function unlockNextTechnology() {
     state.ui.buyType === "iron_miner" ||
     state.ui.buyType === "coal_miner" ||
     state.ui.buyType === "copper_miner" ||
+    state.ui.buyType === "oil_miner" ||
+    state.ui.buyType === "aluminum_miner" ||
     state.ui.buyType === "forge" ||
     state.ui.buyType === "assembler"
   ) {

@@ -12,9 +12,13 @@ function contractResourcePool(techState = defaultTechState()) {
   const list = [
     { key: "stone", label: "Pedra", price: CONFIG.stonePrice, unlocked: true },
     { key: "wood", label: "Fusta", price: CONFIG.woodPrice, unlocked: true },
+    { key: "sand", label: "Sorra", price: CONFIG.sandPrice, unlocked: true },
+    { key: "water", label: "Aigua", price: CONFIG.waterPrice, unlocked: true },
     { key: "iron", label: "Ferro", price: CONFIG.ironPrice, unlocked: tech.ironUnlocked },
     { key: "coal", label: "Carbo", price: CONFIG.coalPrice, unlocked: tech.advancedMinesUnlocked },
     { key: "copper", label: "Coure", price: CONFIG.copperPrice, unlocked: tech.advancedMinesUnlocked },
+    { key: "oil", label: "Petroli", price: CONFIG.oilPrice, unlocked: tech.advancedMinesUnlocked },
+    { key: "aluminum", label: "Alumini", price: CONFIG.aluminumPrice, unlocked: tech.advancedMinesUnlocked },
     { key: "parts", label: "Peces", price: CONFIG.partsPrice, unlocked: tech.forgeUnlocked },
     {
       key: "steel",
@@ -28,9 +32,16 @@ function contractResourcePool(techState = defaultTechState()) {
       price: CONFIG.platesPrice,
       unlocked: tech.forgeUnlocked && tech.advancedMinesUnlocked,
     },
+    { key: "silicon", label: "Silici", price: CONFIG.siliconPrice, unlocked: tech.forgeUnlocked && tech.advancedMinesUnlocked },
+    { key: "plastic", label: "Plastic", price: CONFIG.plasticPrice, unlocked: tech.forgeUnlocked && tech.advancedMinesUnlocked },
+    { key: "steam", label: "Vapor", price: CONFIG.steamPrice, unlocked: tech.forgeUnlocked && tech.advancedMinesUnlocked },
     { key: "modules", label: "Moduls", price: CONFIG.modulesPrice, unlocked: tech.assemblerUnlocked },
     { key: "circuits", label: "Circuits", price: CONFIG.circuitsPrice, unlocked: tech.assemblerUnlocked },
     { key: "frames", label: "Bastidors", price: CONFIG.framesPrice, unlocked: tech.assemblerUnlocked },
+    { key: "rubber", label: "Goma", price: CONFIG.rubberPrice, unlocked: tech.assemblerUnlocked && tech.advancedMinesUnlocked },
+    { key: "wiring", label: "Cablejat", price: CONFIG.wiringPrice, unlocked: tech.assemblerUnlocked && tech.advancedMinesUnlocked },
+    { key: "microchips", label: "Microxips", price: CONFIG.microchipsPrice, unlocked: tech.assemblerUnlocked && tech.advancedMinesUnlocked },
+    { key: "batteries", label: "Bateries", price: CONFIG.batteriesPrice, unlocked: tech.assemblerUnlocked && tech.advancedMinesUnlocked },
   ];
   return list.filter((item) => item.unlocked);
 }
@@ -361,6 +372,12 @@ function getNetworkSnapshot() {
   const connectedWoodMiners = woodMinerNodes().filter((node) =>
     reachableFromWarehouse.has(node.id)
   );
+  const connectedSandMiners = sandMinerNodes().filter((node) =>
+    reachableFromWarehouse.has(node.id)
+  );
+  const connectedWaterMiners = waterMinerNodes().filter((node) =>
+    reachableFromWarehouse.has(node.id)
+  );
   const connectedIronMiners = ironMinerNodes().filter((node) =>
     reachableFromWarehouse.has(node.id)
   );
@@ -370,12 +387,26 @@ function getNetworkSnapshot() {
   const connectedCopperMiners = copperMinerNodes().filter((node) =>
     reachableFromWarehouse.has(node.id)
   );
+  const connectedOilMiners = oilMinerNodes().filter((node) =>
+    reachableFromWarehouse.has(node.id)
+  );
+  const connectedAluminumMiners = aluminumMinerNodes().filter((node) =>
+    reachableFromWarehouse.has(node.id)
+  );
   const stoneRate = connectedStoneMiners.reduce(
     (sum, miner) => sum + minerRatePerSec(miner.level),
     0
   );
   const woodRate = connectedWoodMiners.reduce(
     (sum, miner) => sum + woodMinerRatePerSec(miner.level),
+    0
+  );
+  const sandRate = connectedSandMiners.reduce(
+    (sum, miner) => sum + sandMinerRatePerSec(miner.level),
+    0
+  );
+  const waterRate = connectedWaterMiners.reduce(
+    (sum, miner) => sum + waterMinerRatePerSec(miner.level),
     0
   );
   const ironRate = connectedIronMiners.reduce(
@@ -388,6 +419,14 @@ function getNetworkSnapshot() {
   );
   const copperRate = connectedCopperMiners.reduce(
     (sum, miner) => sum + copperMinerRatePerSec(miner.level),
+    0
+  );
+  const oilRate = connectedOilMiners.reduce(
+    (sum, miner) => sum + oilMinerRatePerSec(miner.level),
+    0
+  );
+  const aluminumRate = connectedAluminumMiners.reduce(
+    (sum, miner) => sum + aluminumMinerRatePerSec(miner.level),
     0
   );
   const processorRates = {};
@@ -405,22 +444,43 @@ function getNetworkSnapshot() {
   const forgeRate =
     (processorRates.forge_parts || 0) +
     (processorRates.forge_steel || 0) +
-    (processorRates.forge_plates || 0);
+    (processorRates.forge_plates || 0) +
+    (processorRates.forge_silicon || 0) +
+    (processorRates.forge_plastic || 0) +
+    (processorRates.forge_steam || 0);
   const assemblerRate =
     (processorRates.assembler_modules || 0) +
     (processorRates.assembler_circuits || 0) +
-    (processorRates.assembler_frames || 0);
+    (processorRates.assembler_frames || 0) +
+    (processorRates.assembler_rubber || 0) +
+    (processorRates.assembler_wiring || 0) +
+    (processorRates.assembler_microchips || 0) +
+    (processorRates.assembler_batteries || 0);
 
   return {
     warehouseNode,
     marketNode,
     reachableFromWarehouse,
-    connectedRate: stoneRate + woodRate + ironRate + coalRate + copperRate + processingRate,
+    connectedRate:
+      stoneRate +
+      woodRate +
+      sandRate +
+      waterRate +
+      ironRate +
+      coalRate +
+      copperRate +
+      oilRate +
+      aluminumRate +
+      processingRate,
     stoneRate,
     woodRate,
+    sandRate,
+    waterRate,
     ironRate,
     coalRate,
     copperRate,
+    oilRate,
+    aluminumRate,
     forgeRate,
     assemblerRate,
     processorRates,

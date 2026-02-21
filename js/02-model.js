@@ -69,6 +69,14 @@ function woodMinerNodes() {
   return state.nodes.filter((node) => node.type === "wood_miner");
 }
 
+function sandMinerNodes() {
+  return state.nodes.filter((node) => node.type === "sand_miner");
+}
+
+function waterMinerNodes() {
+  return state.nodes.filter((node) => node.type === "water_miner");
+}
+
 function ironMinerNodes() {
   return state.nodes.filter((node) => node.type === "iron_miner");
 }
@@ -79,6 +87,14 @@ function coalMinerNodes() {
 
 function copperMinerNodes() {
   return state.nodes.filter((node) => node.type === "copper_miner");
+}
+
+function oilMinerNodes() {
+  return state.nodes.filter((node) => node.type === "oil_miner");
+}
+
+function aluminumMinerNodes() {
+  return state.nodes.filter((node) => node.type === "aluminum_miner");
 }
 
 function forgeNodes() {
@@ -277,9 +293,13 @@ function productionMultiplierFor(type) {
   const isMiner =
     type === "miner" ||
     type === "wood_miner" ||
+    type === "sand_miner" ||
+    type === "water_miner" ||
     type === "iron_miner" ||
     type === "coal_miner" ||
-    type === "copper_miner";
+    type === "copper_miner" ||
+    type === "oil_miner" ||
+    type === "aluminum_miner";
 
   if (isMiner && hasResearch("rs_mining_drill")) {
     multiplier *= 1.15;
@@ -323,6 +343,14 @@ function woodMinerRatePerSec(level) {
   return 0.8 * (1 + (level - 1) * 0.32) * productionMultiplierFor("wood_miner");
 }
 
+function sandMinerRatePerSec(level) {
+  return 0.74 * (1 + (level - 1) * 0.31) * productionMultiplierFor("sand_miner");
+}
+
+function waterMinerRatePerSec(level) {
+  return 0.82 * (1 + (level - 1) * 0.3) * productionMultiplierFor("water_miner");
+}
+
 function ironMinerRatePerSec(level) {
   return 0.55 * (1 + (level - 1) * 0.28) * productionMultiplierFor("iron_miner");
 }
@@ -333,6 +361,14 @@ function coalMinerRatePerSec(level) {
 
 function copperMinerRatePerSec(level) {
   return 0.52 * (1 + (level - 1) * 0.29) * productionMultiplierFor("copper_miner");
+}
+
+function oilMinerRatePerSec(level) {
+  return 0.45 * (1 + (level - 1) * 0.27) * productionMultiplierFor("oil_miner");
+}
+
+function aluminumMinerRatePerSec(level) {
+  return 0.42 * (1 + (level - 1) * 0.28) * productionMultiplierFor("aluminum_miner");
 }
 
 function forgeRatePerSec(level) {
@@ -346,12 +382,27 @@ function assemblerRatePerSec(level) {
 const PROCESSOR_NODE_TYPES = {
   forge: {
     defaultRecipeId: "forge_parts",
-    recipeIds: ["forge_parts", "forge_steel", "forge_plates"],
+    recipeIds: [
+      "forge_parts",
+      "forge_steel",
+      "forge_plates",
+      "forge_silicon",
+      "forge_plastic",
+      "forge_steam",
+    ],
     ratePerSec: forgeRatePerSec,
   },
   assembler: {
     defaultRecipeId: "assembler_modules",
-    recipeIds: ["assembler_modules", "assembler_circuits", "assembler_frames"],
+    recipeIds: [
+      "assembler_modules",
+      "assembler_circuits",
+      "assembler_frames",
+      "assembler_rubber",
+      "assembler_wiring",
+      "assembler_microchips",
+      "assembler_batteries",
+    ],
     ratePerSec: assemblerRatePerSec,
   },
 };
@@ -387,6 +438,36 @@ const RECIPES = {
       plates: CONFIG.forgePlatesPerUnit,
     },
   },
+  forge_silicon: {
+    label: "Silici",
+    inputs: {
+      sand: CONFIG.forgeSiliconSandPerUnit,
+      coal: CONFIG.forgeSiliconCoalPerUnit,
+    },
+    outputs: {
+      silicon: CONFIG.forgeSiliconPerUnit,
+    },
+  },
+  forge_plastic: {
+    label: "Plastic",
+    inputs: {
+      oil: CONFIG.forgePlasticOilPerUnit,
+      coal: CONFIG.forgePlasticCoalPerUnit,
+    },
+    outputs: {
+      plastic: CONFIG.forgePlasticPerUnit,
+    },
+  },
+  forge_steam: {
+    label: "Vapor",
+    inputs: {
+      water: CONFIG.forgeSteamWaterPerUnit,
+      coal: CONFIG.forgeSteamCoalPerUnit,
+    },
+    outputs: {
+      steam: CONFIG.forgeSteamPerUnit,
+    },
+  },
   assembler_modules: {
     label: "Moduls",
     inputs: {
@@ -415,6 +496,48 @@ const RECIPES = {
     },
     outputs: {
       frames: CONFIG.assemblerFramesPerUnit,
+    },
+  },
+  assembler_rubber: {
+    label: "Goma",
+    inputs: {
+      oil: CONFIG.assemblerRubberOilPerUnit,
+      wood: CONFIG.assemblerRubberWoodPerUnit,
+    },
+    outputs: {
+      rubber: CONFIG.assemblerRubberPerUnit,
+    },
+  },
+  assembler_wiring: {
+    label: "Cablejat",
+    inputs: {
+      copper: CONFIG.assemblerWiringCopperPerUnit,
+      rubber: CONFIG.assemblerWiringRubberPerUnit,
+    },
+    outputs: {
+      wiring: CONFIG.assemblerWiringPerUnit,
+    },
+  },
+  assembler_microchips: {
+    label: "Microxips",
+    inputs: {
+      silicon: CONFIG.assemblerMicrochipsSiliconPerUnit,
+      plastic: CONFIG.assemblerMicrochipsPlasticPerUnit,
+      circuits: CONFIG.assemblerMicrochipsCircuitsPerUnit,
+    },
+    outputs: {
+      microchips: CONFIG.assemblerMicrochipsPerUnit,
+    },
+  },
+  assembler_batteries: {
+    label: "Bateries",
+    inputs: {
+      aluminum: CONFIG.assemblerBatteriesAluminumPerUnit,
+      copper: CONFIG.assemblerBatteriesCopperPerUnit,
+      plastic: CONFIG.assemblerBatteriesPlasticPerUnit,
+    },
+    outputs: {
+      batteries: CONFIG.assemblerBatteriesPerUnit,
     },
   },
 };
@@ -464,6 +587,18 @@ function woodMinerPlacementCost() {
   );
 }
 
+function sandMinerPlacementCost() {
+  return Math.round(
+    CONFIG.sandMinerBaseCost * CONFIG.sandMinerCostScale ** sandMinerNodes().length
+  );
+}
+
+function waterMinerPlacementCost() {
+  return Math.round(
+    CONFIG.waterMinerBaseCost * CONFIG.waterMinerCostScale ** waterMinerNodes().length
+  );
+}
+
 function ironMinerPlacementCost() {
   return Math.round(
     CONFIG.ironMinerBaseCost * CONFIG.ironMinerCostScale ** ironMinerNodes().length
@@ -479,6 +614,18 @@ function coalMinerPlacementCost() {
 function copperMinerPlacementCost() {
   return Math.round(
     CONFIG.copperMinerBaseCost * CONFIG.copperMinerCostScale ** copperMinerNodes().length
+  );
+}
+
+function oilMinerPlacementCost() {
+  return Math.round(
+    CONFIG.oilMinerBaseCost * CONFIG.oilMinerCostScale ** oilMinerNodes().length
+  );
+}
+
+function aluminumMinerPlacementCost() {
+  return Math.round(
+    CONFIG.aluminumMinerBaseCost * CONFIG.aluminumMinerCostScale ** aluminumMinerNodes().length
   );
 }
 
@@ -525,6 +672,14 @@ function nodeMaintenancePerSec(node) {
     return 0.16 * (1 + (node.level - 1) * 0.2);
   }
 
+  if (node.type === "sand_miner") {
+    return 0.17 * (1 + (node.level - 1) * 0.2);
+  }
+
+  if (node.type === "water_miner") {
+    return 0.15 * (1 + (node.level - 1) * 0.2);
+  }
+
   if (node.type === "iron_miner") {
     return 0.19 * (1 + (node.level - 1) * 0.2);
   }
@@ -535,6 +690,14 @@ function nodeMaintenancePerSec(node) {
 
   if (node.type === "copper_miner") {
     return 0.22 * (1 + (node.level - 1) * 0.2);
+  }
+
+  if (node.type === "oil_miner") {
+    return 0.24 * (1 + (node.level - 1) * 0.2);
+  }
+
+  if (node.type === "aluminum_miner") {
+    return 0.25 * (1 + (node.level - 1) * 0.2);
   }
 
   if (node.type === "forge") {
@@ -584,6 +747,18 @@ function upgradeCost(node) {
     );
   }
 
+  if (node.type === "sand_miner") {
+    return Math.round(
+      (CONFIG.minerUpgradeBaseCost * 1.2) * CONFIG.minerUpgradeScale ** (node.level - 1)
+    );
+  }
+
+  if (node.type === "water_miner") {
+    return Math.round(
+      (CONFIG.minerUpgradeBaseCost * 1.18) * CONFIG.minerUpgradeScale ** (node.level - 1)
+    );
+  }
+
   if (node.type === "iron_miner") {
     return Math.round(
       (CONFIG.minerUpgradeBaseCost * 1.3) * CONFIG.minerUpgradeScale ** (node.level - 1)
@@ -599,6 +774,18 @@ function upgradeCost(node) {
   if (node.type === "copper_miner") {
     return Math.round(
       (CONFIG.minerUpgradeBaseCost * 1.4) * CONFIG.minerUpgradeScale ** (node.level - 1)
+    );
+  }
+
+  if (node.type === "oil_miner") {
+    return Math.round(
+      (CONFIG.minerUpgradeBaseCost * 1.46) * CONFIG.minerUpgradeScale ** (node.level - 1)
+    );
+  }
+
+  if (node.type === "aluminum_miner") {
+    return Math.round(
+      (CONFIG.minerUpgradeBaseCost * 1.5) * CONFIG.minerUpgradeScale ** (node.level - 1)
     );
   }
 
@@ -636,19 +823,25 @@ function spendMoney(amount) {
 }
 
 function formatInt(value) {
-  return Math.floor(value).toLocaleString("ca-ES");
+  const safe = Number.isFinite(Number(value)) ? Number(value) : 0;
+  return Math.floor(safe).toLocaleString("ca-ES");
 }
 
 function formatCompact(value) {
-  return value.toLocaleString("ca-ES", { maximumFractionDigits: 1 });
+  const safe = Number.isFinite(Number(value)) ? Number(value) : 0;
+  return safe.toLocaleString("ca-ES", { maximumFractionDigits: 1 });
 }
 
 function formatNodeType(type) {
   if (type === "miner") return "Pedra";
   if (type === "wood_miner") return "Miner fusta";
+  if (type === "sand_miner") return "Miner sorra";
+  if (type === "water_miner") return "Extractor aigua";
   if (type === "iron_miner") return "Miner ferro";
   if (type === "coal_miner") return "Miner carbo";
   if (type === "copper_miner") return "Miner coure";
+  if (type === "oil_miner") return "Pou petroli";
+  if (type === "aluminum_miner") return "Miner alumini";
   if (type === "forge") return "Farga";
   if (type === "assembler") return "Assembler";
   if (type === "warehouse") return "Magatzem";
@@ -660,9 +853,13 @@ function formatNodeType(type) {
 function tileLabel(node) {
   if (node.type === "miner") return `P${node.level}`;
   if (node.type === "wood_miner") return `Wd${node.level}`;
+  if (node.type === "sand_miner") return `So${node.level}`;
+  if (node.type === "water_miner") return `Ai${node.level}`;
   if (node.type === "iron_miner") return `F${node.level}`;
   if (node.type === "coal_miner") return `Ca${node.level}`;
   if (node.type === "copper_miner") return `Cu${node.level}`;
+  if (node.type === "oil_miner") return `Pt${node.level}`;
+  if (node.type === "aluminum_miner") return `Al${node.level}`;
   if (node.type === "forge") return `Fg${node.level}`;
   if (node.type === "assembler") return `As${node.level}`;
   if (node.type === "warehouse") return `W${node.level}`;
@@ -674,9 +871,13 @@ function tileLabel(node) {
 function modeLabel(mode) {
   if (mode === "build_miner") return "Comprar: Pedra";
   if (mode === "build_wood_miner") return "Comprar: Fusta";
+  if (mode === "build_sand_miner") return "Comprar: Sorra";
+  if (mode === "build_water_miner") return "Comprar: Aigua";
   if (mode === "build_iron_miner") return "Comprar: Fe";
   if (mode === "build_coal_miner") return "Comprar: Carbo";
   if (mode === "build_copper_miner") return "Comprar: Coure";
+  if (mode === "build_oil_miner") return "Comprar: Petroli";
+  if (mode === "build_aluminum_miner") return "Comprar: Alumini";
   if (mode === "build_forge") return "Comprar: Farga";
   if (mode === "build_assembler") return "Comprar: Asm";
   if (mode === "build_pole") return "Comprar: Conn";

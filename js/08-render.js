@@ -6,15 +6,26 @@ const FLOW_RESOURCE_LABELS = {
   all: "Tot",
   stone: "Pedra",
   wood: "Fusta",
+  sand: "Sorra",
+  water: "Aigua",
   iron: "Ferro",
   coal: "Carbo",
   copper: "Coure",
+  oil: "Petroli",
+  aluminum: "Alumini",
   parts: "Peces",
   steel: "Acer",
   plates: "Plaques",
+  silicon: "Silici",
+  plastic: "Plastic",
+  steam: "Vapor",
   modules: "Moduls",
   circuits: "Circuits",
   frames: "Bastidors",
+  rubber: "Goma",
+  wiring: "Cablejat",
+  microchips: "Microxips",
+  batteries: "Bateries",
 };
 
 function flowResourceLabel(resourceKey) {
@@ -74,15 +85,26 @@ function renderContract() {
   const labelByKey = {
     stone: "Pedra",
     wood: "Fusta",
+    sand: "Sorra",
+    water: "Aigua",
     iron: "Ferro",
     coal: "Carbo",
     copper: "Coure",
+    oil: "Petroli",
+    aluminum: "Alumini",
     parts: "Peces",
     steel: "Acer",
     plates: "Plaques",
+    silicon: "Silici",
+    plastic: "Plastic",
+    steam: "Vapor",
     modules: "Moduls",
     circuits: "Circuits",
     frames: "Bastidors",
+    rubber: "Goma",
+    wiring: "Cablejat",
+    microchips: "Microxips",
+    batteries: "Bateries",
   };
 
   const requirementRows = (contract, showDelivered) =>
@@ -158,9 +180,13 @@ function nodeOutputResources(node) {
   if (!node) return [];
   if (node.type === "miner") return ["stone"];
   if (node.type === "wood_miner") return ["wood"];
+  if (node.type === "sand_miner") return ["sand"];
+  if (node.type === "water_miner") return ["water"];
   if (node.type === "iron_miner") return ["iron"];
   if (node.type === "coal_miner") return ["coal"];
   if (node.type === "copper_miner") return ["copper"];
+  if (node.type === "oil_miner") return ["oil"];
+  if (node.type === "aluminum_miner") return ["aluminum"];
 
   const recipe = nodeRecipe(node);
   if (!recipe) return [];
@@ -171,9 +197,13 @@ function nodeOutputRatesPerSec(node) {
   if (!node) return {};
   if (node.type === "miner") return { stone: minerRatePerSec(node.level) };
   if (node.type === "wood_miner") return { wood: woodMinerRatePerSec(node.level) };
+  if (node.type === "sand_miner") return { sand: sandMinerRatePerSec(node.level) };
+  if (node.type === "water_miner") return { water: waterMinerRatePerSec(node.level) };
   if (node.type === "iron_miner") return { iron: ironMinerRatePerSec(node.level) };
   if (node.type === "coal_miner") return { coal: coalMinerRatePerSec(node.level) };
   if (node.type === "copper_miner") return { copper: copperMinerRatePerSec(node.level) };
+  if (node.type === "oil_miner") return { oil: oilMinerRatePerSec(node.level) };
+  if (node.type === "aluminum_miner") return { aluminum: aluminumMinerRatePerSec(node.level) };
 
   const cfg = processorConfig(node);
   const recipe = nodeRecipe(node);
@@ -392,6 +422,8 @@ function render() {
   renderResourceStrip();
   dom.minerCostValue.textContent = `${formatInt(minerPlacementCost())}$`;
   dom.woodMinerCostValue.textContent = `${formatInt(woodMinerPlacementCost())}$`;
+  dom.sandMinerCostValue.textContent = `${formatInt(sandMinerPlacementCost())}$`;
+  dom.waterMinerCostValue.textContent = `${formatInt(waterMinerPlacementCost())}$`;
   dom.ironMinerCostValue.textContent = state.tech.ironUnlocked
     ? `${formatInt(ironMinerPlacementCost())}$`
     : "Bloc";
@@ -400,6 +432,12 @@ function render() {
     : "Bloc";
   dom.copperMinerCostValue.textContent = state.tech.advancedMinesUnlocked
     ? `${formatInt(copperMinerPlacementCost())}$`
+    : "Bloc";
+  dom.oilMinerCostValue.textContent = state.tech.advancedMinesUnlocked
+    ? `${formatInt(oilMinerPlacementCost())}$`
+    : "Bloc";
+  dom.aluminumMinerCostValue.textContent = state.tech.advancedMinesUnlocked
+    ? `${formatInt(aluminumMinerPlacementCost())}$`
     : "Bloc";
   dom.forgeCostValue.textContent = state.tech.forgeUnlocked
     ? `${formatInt(forgePlacementCost())}$`
@@ -428,9 +466,13 @@ function render() {
   const inBuyMode =
     state.ui.mode === "build_miner" ||
     state.ui.mode === "build_wood_miner" ||
+    state.ui.mode === "build_sand_miner" ||
+    state.ui.mode === "build_water_miner" ||
     state.ui.mode === "build_iron_miner" ||
     state.ui.mode === "build_coal_miner" ||
     state.ui.mode === "build_copper_miner" ||
+    state.ui.mode === "build_oil_miner" ||
+    state.ui.mode === "build_aluminum_miner" ||
     state.ui.mode === "build_forge" ||
     state.ui.mode === "build_assembler" ||
     state.ui.mode === "build_pole";
@@ -441,9 +483,13 @@ function render() {
   dom.toolRecipeListBtn.classList.toggle("active", state.ui.recipePanelOpen);
   dom.buyMinerTypeBtn.classList.toggle("active", state.ui.buyType === "miner");
   dom.buyWoodMinerTypeBtn.classList.toggle("active", state.ui.buyType === "wood_miner");
+  dom.buySandMinerTypeBtn.classList.toggle("active", state.ui.buyType === "sand_miner");
+  dom.buyWaterMinerTypeBtn.classList.toggle("active", state.ui.buyType === "water_miner");
   dom.buyIronMinerTypeBtn.classList.toggle("active", state.ui.buyType === "iron_miner");
   dom.buyCoalMinerTypeBtn.classList.toggle("active", state.ui.buyType === "coal_miner");
   dom.buyCopperMinerTypeBtn.classList.toggle("active", state.ui.buyType === "copper_miner");
+  dom.buyOilMinerTypeBtn.classList.toggle("active", state.ui.buyType === "oil_miner");
+  dom.buyAluminumMinerTypeBtn.classList.toggle("active", state.ui.buyType === "aluminum_miner");
   dom.buyForgeTypeBtn.classList.toggle("active", state.ui.buyType === "forge");
   dom.buyAssemblerTypeBtn.classList.toggle("active", state.ui.buyType === "assembler");
   dom.buyPoleTypeBtn.classList.toggle("active", state.ui.buyType === "pole");
@@ -463,6 +509,8 @@ function render() {
   dom.buyIronMinerTypeBtn.disabled = !state.tech.ironUnlocked;
   dom.buyCoalMinerTypeBtn.disabled = !state.tech.advancedMinesUnlocked;
   dom.buyCopperMinerTypeBtn.disabled = !state.tech.advancedMinesUnlocked;
+  dom.buyOilMinerTypeBtn.disabled = !state.tech.advancedMinesUnlocked;
+  dom.buyAluminumMinerTypeBtn.disabled = !state.tech.advancedMinesUnlocked;
   dom.buyForgeTypeBtn.disabled = !state.tech.forgeUnlocked;
   dom.buyAssemblerTypeBtn.disabled = !state.tech.assemblerUnlocked;
   dom.sell10Btn.disabled = totalStored < 1;

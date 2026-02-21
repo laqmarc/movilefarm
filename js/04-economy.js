@@ -1,15 +1,26 @@
 ﻿function basePriceByKey(resourceKey) {
   if (resourceKey === "stone") return CONFIG.stonePrice;
   if (resourceKey === "wood") return CONFIG.woodPrice;
+  if (resourceKey === "sand") return CONFIG.sandPrice;
+  if (resourceKey === "water") return CONFIG.waterPrice;
   if (resourceKey === "iron") return CONFIG.ironPrice;
   if (resourceKey === "coal") return CONFIG.coalPrice;
   if (resourceKey === "copper") return CONFIG.copperPrice;
+  if (resourceKey === "oil") return CONFIG.oilPrice;
+  if (resourceKey === "aluminum") return CONFIG.aluminumPrice;
   if (resourceKey === "parts") return CONFIG.partsPrice;
   if (resourceKey === "steel") return CONFIG.steelPrice;
   if (resourceKey === "plates") return CONFIG.platesPrice;
   if (resourceKey === "modules") return CONFIG.modulesPrice;
   if (resourceKey === "circuits") return CONFIG.circuitsPrice;
   if (resourceKey === "frames") return CONFIG.framesPrice;
+  if (resourceKey === "silicon") return CONFIG.siliconPrice;
+  if (resourceKey === "plastic") return CONFIG.plasticPrice;
+  if (resourceKey === "steam") return CONFIG.steamPrice;
+  if (resourceKey === "rubber") return CONFIG.rubberPrice;
+  if (resourceKey === "wiring") return CONFIG.wiringPrice;
+  if (resourceKey === "microchips") return CONFIG.microchipsPrice;
+  if (resourceKey === "batteries") return CONFIG.batteriesPrice;
   return 1;
 }
 
@@ -34,8 +45,9 @@ function updateMarketTick(dtSec) {
   const stockCap = warehouse ? capacity(warehouse.level) : 200;
 
   const keys = [
-    "stone", "wood", "iron", "coal", "copper",
-    "parts", "steel", "plates", "modules", "circuits", "frames",
+    "stone", "wood", "sand", "water", "iron", "coal", "copper", "oil", "aluminum",
+    "parts", "steel", "plates", "silicon", "plastic", "steam",
+    "modules", "circuits", "frames", "rubber", "wiring", "microchips", "batteries",
   ];
   for (const key of keys) {
     const current = getMarketMultiplier(key);
@@ -76,6 +88,18 @@ function resourceCatalog() {
       unlocked: true,
     },
     {
+      key: "sand",
+      label: "Sorra",
+      price: currentResourcePrice("sand"),
+      unlocked: true,
+    },
+    {
+      key: "water",
+      label: "Aigua",
+      price: currentResourcePrice("water"),
+      unlocked: true,
+    },
+    {
       key: "iron",
       label: "Ferro",
       price: currentResourcePrice("iron"),
@@ -91,6 +115,18 @@ function resourceCatalog() {
       key: "copper",
       label: "Coure",
       price: currentResourcePrice("copper"),
+      unlocked: state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "oil",
+      label: "Petroli",
+      price: currentResourcePrice("oil"),
+      unlocked: state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "aluminum",
+      label: "Alumini",
+      price: currentResourcePrice("aluminum"),
       unlocked: state.tech.advancedMinesUnlocked,
     },
     {
@@ -112,6 +148,24 @@ function resourceCatalog() {
       unlocked: state.tech.forgeUnlocked && state.tech.advancedMinesUnlocked,
     },
     {
+      key: "silicon",
+      label: "Silici",
+      price: currentResourcePrice("silicon"),
+      unlocked: state.tech.forgeUnlocked && state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "plastic",
+      label: "Plastic",
+      price: currentResourcePrice("plastic"),
+      unlocked: state.tech.forgeUnlocked && state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "steam",
+      label: "Vapor",
+      price: currentResourcePrice("steam"),
+      unlocked: state.tech.forgeUnlocked && state.tech.advancedMinesUnlocked,
+    },
+    {
       key: "modules",
       label: "Moduls",
       price: currentResourcePrice("modules"),
@@ -128,6 +182,30 @@ function resourceCatalog() {
       label: "Bastidors",
       price: currentResourcePrice("frames"),
       unlocked: state.tech.assemblerUnlocked,
+    },
+    {
+      key: "rubber",
+      label: "Goma",
+      price: currentResourcePrice("rubber"),
+      unlocked: state.tech.assemblerUnlocked && state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "wiring",
+      label: "Cablejat",
+      price: currentResourcePrice("wiring"),
+      unlocked: state.tech.assemblerUnlocked && state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "microchips",
+      label: "Microxips",
+      price: currentResourcePrice("microchips"),
+      unlocked: state.tech.assemblerUnlocked && state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "batteries",
+      label: "Bateries",
+      price: currentResourcePrice("batteries"),
+      unlocked: state.tech.assemblerUnlocked && state.tech.advancedMinesUnlocked,
     },
   ];
 }
@@ -275,6 +353,22 @@ function gameTick(dtSec) {
   state.progression.produced.wood = (state.progression.produced.wood || 0) + storedWood;
   free = Math.max(0, free - storedWood);
 
+  const producedSand = snapshot.sandRate * dtSec;
+  const storedSand = Math.min(producedSand, free);
+  const lostSand = producedSand - storedSand;
+  state.resources.sand += storedSand;
+  state.resources.wastedSand += lostSand;
+  state.progression.produced.sand = (state.progression.produced.sand || 0) + storedSand;
+  free = Math.max(0, free - storedSand);
+
+  const producedWater = snapshot.waterRate * dtSec;
+  const storedWater = Math.min(producedWater, free);
+  const lostWater = producedWater - storedWater;
+  state.resources.water += storedWater;
+  state.resources.wastedWater += lostWater;
+  state.progression.produced.water = (state.progression.produced.water || 0) + storedWater;
+  free = Math.max(0, free - storedWater);
+
   const producedIron = snapshot.ironRate * dtSec;
   const storedIron = Math.min(producedIron, free);
   const lostIron = producedIron - storedIron;
@@ -298,6 +392,22 @@ function gameTick(dtSec) {
   state.resources.wastedCopper += lostCopper;
   state.progression.produced.copper = (state.progression.produced.copper || 0) + storedCopper;
   free = Math.max(0, free - storedCopper);
+
+  const producedOil = snapshot.oilRate * dtSec;
+  const storedOil = Math.min(producedOil, free);
+  const lostOil = producedOil - storedOil;
+  state.resources.oil += storedOil;
+  state.resources.wastedOil += lostOil;
+  state.progression.produced.oil = (state.progression.produced.oil || 0) + storedOil;
+  free = Math.max(0, free - storedOil);
+
+  const producedAluminum = snapshot.aluminumRate * dtSec;
+  const storedAluminum = Math.min(producedAluminum, free);
+  const lostAluminum = producedAluminum - storedAluminum;
+  state.resources.aluminum += storedAluminum;
+  state.resources.wastedAluminum += lostAluminum;
+  state.progression.produced.aluminum = (state.progression.produced.aluminum || 0) + storedAluminum;
+  free = Math.max(0, free - storedAluminum);
 
   free = processConnectedRecipes(snapshot, dtSec, free);
 

@@ -182,6 +182,16 @@ function bindEvents() {
     render();
   });
 
+  dom.buySandMinerTypeBtn.addEventListener("click", () => {
+    setBuildType("sand_miner");
+    render();
+  });
+
+  dom.buyWaterMinerTypeBtn.addEventListener("click", () => {
+    setBuildType("water_miner");
+    render();
+  });
+
   dom.buyIronMinerTypeBtn.addEventListener("click", () => {
     setBuildType("iron_miner");
     render();
@@ -194,6 +204,16 @@ function bindEvents() {
 
   dom.buyCopperMinerTypeBtn.addEventListener("click", () => {
     setBuildType("copper_miner");
+    render();
+  });
+
+  dom.buyOilMinerTypeBtn.addEventListener("click", () => {
+    setBuildType("oil_miner");
+    render();
+  });
+
+  dom.buyAluminumMinerTypeBtn.addEventListener("click", () => {
+    setBuildType("aluminum_miner");
     render();
   });
 
