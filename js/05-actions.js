@@ -1068,7 +1068,12 @@ function tutorialOpen() {
     state.tutorial.step = 0;
   }
   state.tutorial.dismissed = false;
+  state.ui.tutorialExpanded = true;
   render();
+  const bottomPanel = dom.tutorialBox ? dom.tutorialBox.closest(".hud-bottom") : null;
+  if (bottomPanel) {
+    bottomPanel.scrollTop = bottomPanel.scrollHeight;
+  }
 }
 
 function canCycleRecipe(node) {

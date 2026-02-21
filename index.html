@@ -26,9 +26,11 @@
             <strong id="productionValue">0 /s</strong>
           </div>
         </div>
+      </div>
+      <div class="resource-row">
+        <div id="resourceStrip" class="resource-strip"></div>
         <span id="modeLabel" class="badge">Seleccio</span>
       </div>
-      <div id="resourceStrip" class="resource-strip"></div>
     </header>
     <aside id="resourcePanel" class="resource-panel hidden"></aside>
     <aside id="recipePanel" class="resource-panel hidden"></aside>
@@ -163,10 +165,12 @@
           <button id="prestigeBtn">Prestigi</button>
         </div>
       </details>
+      <details id="tutorialBox" class="tutorial-box hidden">
+        <summary>Tutorial</summary>
+        <div id="tutorialOverlay" class="tutorial-overlay"></div>
+      </details>
     </section>
   </main>
-
-  <aside id="tutorialOverlay" class="tutorial-overlay hidden"></aside>
   <div id="toast" class="toast hidden"></div>
   <script src="js/01-bootstrap.js"></script>
   <script src="js/02-model.js"></script>

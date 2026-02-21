@@ -361,6 +361,12 @@ function bindEvents() {
     prestigeReset();
   });
 
+  if (dom.tutorialBox) {
+    dom.tutorialBox.addEventListener("toggle", () => {
+      state.ui.tutorialExpanded = dom.tutorialBox.open;
+    });
+  }
+
   dom.tutorialOverlay.addEventListener("click", (event) => {
     const button = event.target ? event.target.closest("[data-tutorial-action]") : null;
     if (!button) return;

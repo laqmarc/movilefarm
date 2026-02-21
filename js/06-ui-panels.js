@@ -171,21 +171,28 @@ function renderObjectivesPanel() {
 }
 
 function renderTutorialOverlay() {
+  const tutorialBox = dom.tutorialBox;
+  const tutorialContent = dom.tutorialOverlay;
+  if (!tutorialBox || !tutorialContent) return;
+
   if (state.tutorial.completed || state.tutorial.dismissed) {
-    dom.tutorialOverlay.classList.add("hidden");
-    dom.tutorialOverlay.innerHTML = "";
+    tutorialBox.classList.add("hidden");
+    tutorialBox.open = false;
+    tutorialContent.innerHTML = "";
     return;
   }
 
   const step = tutorialStepData(state.tutorial.step);
   if (!step) {
-    dom.tutorialOverlay.classList.add("hidden");
-    dom.tutorialOverlay.innerHTML = "";
+    tutorialBox.classList.add("hidden");
+    tutorialBox.open = false;
+    tutorialContent.innerHTML = "";
     return;
   }
 
-  dom.tutorialOverlay.classList.remove("hidden");
-  dom.tutorialOverlay.innerHTML = `
+  tutorialBox.classList.remove("hidden");
+  tutorialBox.open = state.ui.tutorialExpanded !== false;
+  tutorialContent.innerHTML = `
     <h3>${step.title}</h3>
     <p>${step.body}</p>
     <div class="tutorial-actions">

@@ -236,6 +236,7 @@ const dom = {
   researchTree: document.getElementById("researchTree"),
   objectivesPanel: document.getElementById("objectivesPanel"),
   prestigeBtn: document.getElementById("prestigeBtn"),
+  tutorialBox: document.getElementById("tutorialBox"),
   tutorialOverlay: document.getElementById("tutorialOverlay"),
   acceptContractBtn: document.getElementById("acceptContractBtn"),
   deliverContractBtn: document.getElementById("deliverContractBtn"),
@@ -411,6 +412,7 @@ function createDefaultState() {
       flowResource: "all",
       resourcePanelOpen: false,
       recipePanelOpen: false,
+      tutorialExpanded: true,
       selectedNodeId: null,
       pendingSourceId: null,
       drag: {
