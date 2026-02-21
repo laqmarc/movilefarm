@@ -237,6 +237,10 @@ function bindEvents() {
     cycleSelectedRecipe();
   });
 
+  dom.toolRecipeListBtn.addEventListener("click", () => {
+    toggleRecipePanel();
+  });
+
   dom.toolDeleteBtn.addEventListener("click", () => {
     removeSelectedNode();
   });
@@ -259,6 +263,12 @@ function bindEvents() {
   dom.resourcePanel.addEventListener("click", (event) => {
     if (event.target && event.target.id === "closeResourcePanelBtn") {
       toggleResourcePanel(false);
+    }
+  });
+
+  dom.recipePanel.addEventListener("click", (event) => {
+    if (event.target && event.target.id === "closeRecipePanelBtn") {
+      toggleRecipePanel(false);
     }
   });
 
@@ -323,8 +333,14 @@ function bindEvents() {
   });
 
   window.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && state.ui.resourcePanelOpen) {
-      toggleResourcePanel(false);
+    if (event.key === "Escape") {
+      if (state.ui.resourcePanelOpen) {
+        toggleResourcePanel(false);
+        return;
+      }
+      if (state.ui.recipePanelOpen) {
+        toggleRecipePanel(false);
+      }
     }
   });
 

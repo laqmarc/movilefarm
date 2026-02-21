@@ -50,6 +50,49 @@ function renderResourcePanel() {
   `;
 }
 
+function renderRecipePanel() {
+  if (!state.ui.recipePanelOpen) {
+    dom.recipePanel.classList.add("hidden");
+    dom.recipePanel.innerHTML = "";
+    return;
+  }
+
+  const groups = unlockedRecipeGroups();
+  const content =
+    groups.length > 0
+      ? groups
+          .map((group) => {
+            const rows = group.recipes
+              .map((recipe) => {
+                return `
+                  <div class="recipe-row">
+                    <strong>${recipe.label}</strong>
+                    <span>In: ${recipeAmountsLine(recipe.inputs)}</span>
+                    <span>Out: ${recipeAmountsLine(recipe.outputs)}</span>
+                  </div>
+                `;
+              })
+              .join("");
+            return `
+              <div class="recipe-group">
+                <h4>${group.label}</h4>
+                ${rows}
+              </div>
+            `;
+          })
+          .join("")
+      : `<div class="recipe-empty">Desbloqueja Farga o Assembler per veure receptes.</div>`;
+
+  dom.recipePanel.classList.remove("hidden");
+  dom.recipePanel.innerHTML = `
+    <div class="res-panel-head">
+      <h3>Receptes</h3>
+      <button type="button" id="closeRecipePanelBtn">Tancar</button>
+    </div>
+    ${content}
+  `;
+}
+
 function renderResearchTree() {
   const points = Math.floor(state.research.points || 0);
   const rows = RESEARCH_TREE.map((node) => {
@@ -85,9 +128,13 @@ function renderObjectivesPanel() {
     const current = Math.floor(objectiveProgress(objective));
     const done = !!state.progression.objectivesCompleted[objective.id];
     const css = done ? "objective-row done" : "objective-row";
+    const rewardLabel = objectiveRewardText(objective.reward);
     return `
       <div class="${css}">
-        <span>${objective.label}</span>
+        <div>
+          <span>${objective.label}</span>
+          <small>${rewardLabel}</small>
+        </div>
         <strong>${done ? "OK" : `${formatInt(Math.min(objective.target, current))} / ${formatInt(objective.target)}`}</strong>
       </div>
     `;
@@ -95,11 +142,34 @@ function renderObjectivesPanel() {
 
   const completed = completedObjectivesCount();
   const total = OBJECTIVES.length;
-  const bonus = `${Math.round((prestigeProductionMultiplier() - 1) * 100)}%`;
+  const prestigeLevel = state.progression.prestigeLevel || 0;
+  const currentBonus = `${Math.round((prestigeProductionMultiplier() - 1) * 100)}%`;
+  const nextBonus = `${Math.round((1 + (prestigeLevel + 1) * 0.12 - 1) * 100)}%`;
+  const premiumDone = state.progression.contractsPremiumCompleted || 0;
+  const requiredObjectives = 5;
+  const requiredMoney = 5000;
+  const moneyEarned = Math.floor(state.progression.totalMoneyEarned || 0);
+  const reqObjOk = completed >= requiredObjectives;
+  const reqMoneyOk = moneyEarned >= requiredMoney;
+  const buffs = activeBuffEntries();
+  const buffRows =
+    buffs.length > 0
+      ? buffs
+          .map((buff) => {
+            return `<div class="contract-line"><span>${buff.label}</span><strong>${buff.remainingSec}s</strong></div>`;
+          })
+          .join("")
+      : `<div class="contract-line"><span>Buffs actius</span><strong>Cap</strong></div>`;
 
   dom.objectivesPanel.innerHTML = `
     <div class="contract-line"><span>Completats</span><strong>${completed} / ${total}</strong></div>
-    <div class="contract-line"><span>Bonus prestigi</span><strong>${bonus}</strong></div>
+    <div class="contract-line"><span>Prestigi</span><strong>${formatInt(prestigeLevel)}</strong></div>
+    <div class="contract-line"><span>Bonus actual</span><strong>${currentBonus}</strong></div>
+    <div class="contract-line"><span>Bonus seguent</span><strong>${nextBonus}</strong></div>
+    <div class="contract-line"><span>Premium fets</span><strong>${formatInt(premiumDone)}</strong></div>
+    <div class="contract-line"><span>Req Obj</span><strong>${reqObjOk ? "OK" : `${completed}/${requiredObjectives}`}</strong></div>
+    <div class="contract-line"><span>Req Diners</span><strong>${reqMoneyOk ? "OK" : `${formatInt(Math.min(requiredMoney, moneyEarned))}/${formatInt(requiredMoney)}`}</strong></div>
+    ${buffRows}
     ${rows}
   `;
 }

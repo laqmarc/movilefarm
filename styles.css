@@ -211,6 +211,42 @@ h2 {
   font-variant-numeric: tabular-nums;
 }
 
+.recipe-group {
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(23, 59, 47, 0.18);
+}
+
+.recipe-group h4 {
+  margin: 0 0 4px;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+}
+
+.recipe-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+  font-size: 0.8rem;
+}
+
+.recipe-row strong {
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.recipe-row span {
+  color: var(--ink-soft);
+  font-size: 0.76rem;
+}
+
+.recipe-empty {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  padding: 6px 2px;
+}
+
 .layout {
   display: none;
 }
@@ -249,6 +285,68 @@ h2 {
   transform-origin: 0 0;
   transform: translate3d(0, 0, 0);
   will-change: transform;
+}
+
+.flow-legend {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 6;
+  pointer-events: none;
+  min-width: 150px;
+  max-width: min(52vw, 250px);
+  border-radius: 10px;
+  border: 1px solid rgba(23, 59, 47, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 20px rgba(23, 59, 47, 0.16);
+  padding: 6px;
+  font-size: 0.72rem;
+  color: var(--ink);
+}
+
+.flow-legend .legend-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.flow-legend .legend-sub {
+  color: var(--ink-soft);
+  margin-bottom: 4px;
+}
+
+.flow-legend .legend-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+.flow-legend .legend-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flow-legend .legend-rate {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.flow-legend .legend-bar {
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(45, 106, 79, 0.18);
+  overflow: hidden;
+}
+
+.flow-legend .legend-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #3a7a5f, #4b9d76);
 }
 
 .map-stage {
@@ -358,6 +456,7 @@ h2 {
   stroke: var(--wire);
   stroke-width: 5;
   stroke-linecap: round;
+  transition: stroke-width 120ms linear, opacity 120ms linear;
 }
 
 .cable-line.active {
@@ -424,7 +523,7 @@ h2 {
 }
 
 .action-row {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .buy-picker {
@@ -636,10 +735,20 @@ button:disabled {
   border-bottom: 1px dashed rgba(23, 59, 47, 0.16);
 }
 
+.objective-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .research-row small,
 .objective-row small {
   color: var(--ink-soft);
   font-size: 0.74rem;
+}
+
+.objective-row.done small {
+  color: #2f8f57;
 }
 
 .research-row button {
@@ -706,5 +815,14 @@ button:disabled {
 
   .action-row {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .flow-legend {
+    top: 6px;
+    right: 6px;
+    min-width: 132px;
+    max-width: 56vw;
+    padding: 5px;
+    font-size: 0.69rem;
   }
 }

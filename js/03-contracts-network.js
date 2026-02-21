@@ -35,6 +35,97 @@ function contractResourcePool(techState = defaultTechState()) {
   return list.filter((item) => item.unlocked);
 }
 
+const PREMIUM_CONTRACT_CHAINS = [
+  {
+    id: "chain_plates_circuits",
+    label: "Plaques + Circuits",
+    requires: (tech) => tech.forgeUnlocked && tech.advancedMinesUnlocked && tech.assemblerUnlocked,
+    steps: ["Mines Coure/Carbo", "Farga: Plaques", "Assembler: Circuits"],
+    requirements: [
+      { key: "plates", min: 18, max: 32 },
+      { key: "circuits", min: 16, max: 30 },
+      { key: "parts", min: 18, max: 34 },
+    ],
+    baseDurationSec: 170,
+    rewardMin: 2.6,
+    rewardMax: 3.45,
+  },
+  {
+    id: "chain_steel_frames",
+    label: "Acer + Bastidors",
+    requires: (tech) => tech.forgeUnlocked && tech.advancedMinesUnlocked && tech.assemblerUnlocked,
+    steps: ["Mines Ferro/Carbo/Coure", "Farga: Acer + Plaques", "Assembler: Bastidors"],
+    requirements: [
+      { key: "steel", min: 18, max: 30 },
+      { key: "frames", min: 14, max: 24 },
+      { key: "plates", min: 14, max: 26 },
+    ],
+    baseDurationSec: 185,
+    rewardMin: 2.75,
+    rewardMax: 3.55,
+  },
+  {
+    id: "chain_parts_modules",
+    label: "Peces + Moduls",
+    requires: (tech) => tech.forgeUnlocked && tech.advancedMinesUnlocked && tech.assemblerUnlocked,
+    steps: ["Mines Fusta/Ferro/Coure", "Farga: Peces + Plaques", "Assembler: Moduls"],
+    requirements: [
+      { key: "parts", min: 24, max: 42 },
+      { key: "modules", min: 14, max: 26 },
+      { key: "plates", min: 14, max: 28 },
+    ],
+    baseDurationSec: 165,
+    rewardMin: 2.55,
+    rewardMax: 3.35,
+  },
+];
+
+function premiumChainsForTech(techState = defaultTechState()) {
+  const tech = { ...defaultTechState(), ...(techState || {}) };
+  return PREMIUM_CONTRACT_CHAINS.filter((chain) => chain.requires(tech));
+}
+
+function createPremiumContractOffer(id, techState, pool) {
+  const chains = premiumChainsForTech(techState);
+  if (chains.length < 1) return null;
+
+  const chain = chains[Math.floor(Math.random() * chains.length)];
+  const scale = 0.9 + Math.random() * 0.8;
+  const requirements = chain.requirements.map((item) => {
+    const base = item.min + Math.random() * (item.max - item.min);
+    return {
+      key: item.key,
+      required: Math.max(8, Math.round(base * scale)),
+    };
+  });
+
+  const priceMap = new Map(pool.map((item) => [item.key, item.price]));
+  const totalValue = requirements.reduce((sum, req) => {
+    return sum + req.required * (priceMap.get(req.key) || 1);
+  }, 0);
+  const rewardRoll = chain.rewardMin + Math.random() * (chain.rewardMax - chain.rewardMin);
+  const reward = Math.round(totalValue * rewardRoll * contractRewardBonusMultiplier());
+  const penalty = Math.max(22, Math.round(reward * 0.31));
+  const durationSec = Math.floor(
+    chain.baseDurationSec +
+      totalValue * 0.56 +
+      requirements.length * 16 +
+      Math.random() * 60
+  );
+
+  return {
+    id,
+    tier: "premium",
+    chainId: chain.id,
+    chainLabel: chain.label,
+    chainSteps: [...chain.steps],
+    requirements,
+    durationSec,
+    reward,
+    penalty,
+  };
+}
+
 function normalizeContract(contract) {
   if (!contract || typeof contract !== "object") return null;
 
@@ -56,6 +147,11 @@ function normalizeContract(contract) {
 
   return {
     ...contract,
+    chainId: typeof contract.chainId === "string" ? contract.chainId : null,
+    chainLabel: typeof contract.chainLabel === "string" ? contract.chainLabel : "",
+    chainSteps: Array.isArray(contract.chainSteps)
+      ? contract.chainSteps.filter((item) => typeof item === "string")
+      : [],
     requirements,
     delivered: deliveredMap,
   };
@@ -66,70 +162,47 @@ function createContractOffer(id, context = null) {
   const researchState = context && context.research ? context.research : { unlocked: {} };
   const pool = contractResourcePool(techState || defaultTechState());
   const totalUnlocked = pool.length;
-  const premiumRoll = premiumContractsUnlocked(researchState) && totalUnlocked >= 6 && Math.random() < 0.3;
-  let tier = premiumRoll ? "premium" : "normal";
-  let requirements = [];
+  const premiumChance = 0.3 + contractPremiumChanceBonus();
+  const canTryPremium =
+    premiumContractsUnlocked(researchState) &&
+    premiumChainsForTech(techState).length > 0 &&
+    Math.random() < premiumChance;
 
-  if (premiumRoll) {
-    const premiumCandidates = pool.filter((res) =>
-      ["plates", "circuits", "modules", "frames"].includes(res.key)
-    );
-    const supportCandidates = pool.filter((res) =>
-      ["parts", "steel", "copper", "coal", "iron"].includes(res.key)
-    );
-    if (premiumCandidates.length > 0) {
-      const picks = [];
-      picks.push(premiumCandidates[Math.floor(Math.random() * premiumCandidates.length)]);
-      if (premiumCandidates.length > 1) {
-        picks.push(premiumCandidates[Math.floor(Math.random() * premiumCandidates.length)]);
-      } else if (supportCandidates.length > 0) {
-        picks.push(supportCandidates[Math.floor(Math.random() * supportCandidates.length)]);
-      }
-      if (supportCandidates.length > 0) {
-        picks.push(supportCandidates[Math.floor(Math.random() * supportCandidates.length)]);
-      }
-      const unique = Array.from(new Map(picks.map((item) => [item.key, item])).values());
-      requirements = unique.map((res) => {
-        const baseUnits = 34 + Math.random() * 68;
-        const qtyScale = 1.32 / Math.sqrt(Math.max(1, res.price));
-        const required = Math.max(10, Math.round(baseUnits * qtyScale));
-        return { key: res.key, required };
-      });
-    } else {
-      tier = "normal";
+  if (canTryPremium) {
+    const premiumOffer = createPremiumContractOffer(id, techState, pool);
+    if (premiumOffer) {
+      return premiumOffer;
     }
   }
 
-  if (tier === "normal") {
-    const maxReq = totalUnlocked >= 5 ? 3 : totalUnlocked >= 3 ? 2 : 1;
-    const minReq = totalUnlocked >= 2 ? 2 : 1;
-    const reqCount = Math.max(1, Math.min(maxReq, minReq + Math.floor(Math.random() * maxReq)));
-    const picks = [...pool].sort(() => Math.random() - 0.5).slice(0, reqCount);
-    requirements = picks.map((res) => {
-      const baseUnits = 28 + Math.random() * 60;
-      const qtyScale = 1.45 / Math.sqrt(Math.max(1, res.price));
-      const required = Math.max(6, Math.round(baseUnits * qtyScale));
-      return { key: res.key, required };
-    });
-  }
+  const maxReq = totalUnlocked >= 5 ? 3 : totalUnlocked >= 3 ? 2 : 1;
+  const minReq = totalUnlocked >= 2 ? 2 : 1;
+  const reqCount = Math.max(1, Math.min(maxReq, minReq + Math.floor(Math.random() * maxReq)));
+  const picks = [...pool].sort(() => Math.random() - 0.5).slice(0, reqCount);
+  const requirements = picks.map((res) => {
+    const baseUnits = 28 + Math.random() * 60;
+    const qtyScale = 1.45 / Math.sqrt(Math.max(1, res.price));
+    const required = Math.max(6, Math.round(baseUnits * qtyScale));
+    return { key: res.key, required };
+  });
 
   const totalValue = requirements.reduce((sum, req) => {
     const meta = pool.find((res) => res.key === req.key);
     return sum + req.required * (meta ? meta.price : 1);
   }, 0);
-  const rewardMultiplier = tier === "premium" ? 2.15 + Math.random() * 0.95 : 1.5 + Math.random() * 0.75;
+  const rewardMultiplier = (1.5 + Math.random() * 0.75) * contractRewardBonusMultiplier();
   const reward = Math.round(totalValue * rewardMultiplier);
-  const penalty = Math.max(14, Math.round(reward * (tier === "premium" ? 0.3 : 0.24)));
+  const penalty = Math.max(14, Math.round(reward * 0.24));
   const durationSec = Math.floor(
-    (tier === "premium" ? 120 : 85) +
-      totalValue * 0.7 +
-      requirements.length * 18 +
-      Math.random() * 55
+    85 + totalValue * 0.7 + requirements.length * 18 + Math.random() * 55
   );
 
   return {
     id,
-    tier,
+    tier: "normal",
+    chainId: null,
+    chainLabel: "",
+    chainSteps: [],
     requirements,
     durationSec,
     reward,

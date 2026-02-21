@@ -540,18 +540,100 @@ function completedObjectivesCount() {
   return Object.values(state.progression.objectivesCompleted || {}).filter(Boolean).length;
 }
 
+function objectiveRewardText(reward) {
+  const safe = reward || {};
+  const parts = [];
+  const rp = Math.max(0, Math.floor(Number(safe.rp) || 0));
+  const money = Math.max(0, Math.floor(Number(safe.money) || 0));
+  if (rp > 0) parts.push(`+${formatInt(rp)} RP`);
+  if (money > 0) parts.push(`+${formatInt(money)}$`);
+
+  const buffs = Array.isArray(safe.buffs) ? safe.buffs : [];
+  for (const buff of buffs) {
+    const key = typeof buff?.key === "string" ? buff.key : "";
+    const seconds = Math.max(1, Math.floor(Number(buff?.seconds) || 0));
+    const meta = buffDefinition(key);
+    if (!meta) continue;
+    parts.push(`${meta.label} ${seconds}s`);
+  }
+
+  if (parts.length < 1) {
+    return "+12 RP";
+  }
+  return parts.join(" | ");
+}
+
+function grantObjectiveReward(reward) {
+  const safe = reward || {};
+  const granted = {
+    rp: 0,
+    money: 0,
+    buffs: [],
+  };
+
+  const rp = Math.max(0, Math.floor(Number(safe.rp) || 0));
+  const money = Math.max(0, Math.floor(Number(safe.money) || 0));
+  if (rp > 0) {
+    state.research.points += rp;
+    granted.rp += rp;
+  }
+  if (money > 0) {
+    state.money += money;
+    state.progression.totalMoneyEarned += money;
+    granted.money += money;
+  }
+
+  const buffs = Array.isArray(safe.buffs) ? safe.buffs : [];
+  const now = Date.now();
+  for (const buff of buffs) {
+    const key = typeof buff?.key === "string" ? buff.key : "";
+    const seconds = Math.max(1, Math.floor(Number(buff?.seconds) || 0));
+    const meta = buffDefinition(key);
+    if (!meta) continue;
+    const currentEndAt = buffEndAt(key);
+    const nextEndAt = now + seconds * 1000;
+    buffState()[key] = Math.max(currentEndAt, nextEndAt);
+    granted.buffs.push({ key, seconds });
+  }
+
+  if (granted.rp < 1 && granted.money < 1 && granted.buffs.length < 1) {
+    state.research.points += 12;
+    granted.rp = 12;
+  }
+
+  return granted;
+}
+
 function updateObjectivesProgress() {
   let newlyCompleted = 0;
+  let totalRp = 0;
+  let totalMoney = 0;
+  const buffSummary = new Map();
+
   for (const objective of OBJECTIVES) {
     if (state.progression.objectivesCompleted[objective.id]) continue;
     const current = objectiveProgress(objective);
     if (current < objective.target) continue;
     state.progression.objectivesCompleted[objective.id] = true;
     newlyCompleted += 1;
-    state.research.points += 12;
+    const granted = grantObjectiveReward(objective.reward);
+    totalRp += granted.rp;
+    totalMoney += granted.money;
+    for (const buff of granted.buffs) {
+      buffSummary.set(buff.key, Math.max(buffSummary.get(buff.key) || 0, buff.seconds));
+    }
   }
+
   if (newlyCompleted > 0) {
-    showToast(`Objectiu completat x${newlyCompleted}`);
+    const parts = [`Objectiu x${newlyCompleted}`];
+    if (totalRp > 0) parts.push(`+${formatInt(totalRp)} RP`);
+    if (totalMoney > 0) parts.push(`+${formatInt(totalMoney)}$`);
+    for (const [key, sec] of buffSummary.entries()) {
+      const meta = buffDefinition(key);
+      if (!meta) continue;
+      parts.push(`${meta.label} ${sec}s`);
+    }
+    showToast(parts.join(" | "));
   }
 }
 
@@ -684,6 +766,83 @@ function tutorialOpen() {
 function canCycleRecipe(node) {
   const cfg = processorConfig(node);
   return !!(cfg && cfg.recipeIds.length > 1);
+}
+
+function recipeResourceLabel(resourceKey) {
+  if (resourceKey === "stone") return "Pedra";
+  if (resourceKey === "wood") return "Fusta";
+  if (resourceKey === "iron") return "Ferro";
+  if (resourceKey === "coal") return "Carbo";
+  if (resourceKey === "copper") return "Coure";
+  if (resourceKey === "parts") return "Peces";
+  if (resourceKey === "steel") return "Acer";
+  if (resourceKey === "plates") return "Plaques";
+  if (resourceKey === "modules") return "Moduls";
+  if (resourceKey === "circuits") return "Circuits";
+  if (resourceKey === "frames") return "Bastidors";
+  return resourceKey;
+}
+
+function recipeAmountsLine(amounts) {
+  const entries = Object.entries(amounts || {});
+  if (entries.length < 1) return "-";
+  return entries
+    .map(([resourceKey, amount]) => `${recipeResourceLabel(resourceKey)} ${formatCompact(amount)}`)
+    .join(" + ");
+}
+
+function recipeBuildingLabel(nodeType) {
+  if (nodeType === "forge") return "Farga";
+  if (nodeType === "assembler") return "Assembler";
+  return formatNodeType(nodeType);
+}
+
+function recipeBuildingUnlocked(nodeType) {
+  if (nodeType === "forge") return !!state.tech.forgeUnlocked;
+  if (nodeType === "assembler") return !!state.tech.assemblerUnlocked;
+  return true;
+}
+
+function unlockedRecipeGroups() {
+  const groups = [];
+  for (const [nodeType, cfg] of Object.entries(PROCESSOR_NODE_TYPES || {})) {
+    if (!recipeBuildingUnlocked(nodeType)) continue;
+    const recipeIds = Array.isArray(cfg.recipeIds) ? cfg.recipeIds : [];
+    if (recipeIds.length < 1) continue;
+
+    const recipes = recipeIds
+      .map((recipeId) => {
+        const recipe = RECIPES[recipeId];
+        if (!recipe) return null;
+        return {
+          id: recipeId,
+          label: recipe.label || recipeId,
+          inputs: recipe.inputs || {},
+          outputs: recipe.outputs || {},
+        };
+      })
+      .filter(Boolean);
+
+    if (recipes.length < 1) continue;
+    groups.push({
+      nodeType,
+      label: recipeBuildingLabel(nodeType),
+      recipes,
+    });
+  }
+  return groups;
+}
+
+function toggleRecipePanel(forceOpen) {
+  if (typeof forceOpen === "boolean") {
+    state.ui.recipePanelOpen = forceOpen;
+  } else {
+    state.ui.recipePanelOpen = !state.ui.recipePanelOpen;
+  }
+  if (state.ui.recipePanelOpen) {
+    state.ui.resourcePanelOpen = false;
+  }
+  render();
 }
 
 function cycleSelectedRecipe() {
@@ -879,6 +1038,9 @@ function toggleResourcePanel(forceOpen) {
     state.ui.resourcePanelOpen = forceOpen;
   } else {
     state.ui.resourcePanelOpen = !state.ui.resourcePanelOpen;
+  }
+  if (state.ui.resourcePanelOpen) {
+    state.ui.recipePanelOpen = false;
   }
   render();
 }

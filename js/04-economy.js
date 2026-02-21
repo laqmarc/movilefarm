@@ -23,7 +23,7 @@ function getMarketMultiplier(resourceKey) {
 function currentResourcePrice(resourceKey) {
   const base = basePriceByKey(resourceKey);
   const dynamic = getMarketMultiplier(resourceKey);
-  return Math.max(1, Math.round(base * dynamic));
+  return Math.max(1, Math.round(base * dynamic * marketSellBonusMultiplier()));
 }
 
 function updateMarketTick(dtSec) {

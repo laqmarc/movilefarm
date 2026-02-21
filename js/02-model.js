@@ -139,15 +139,112 @@ const RESEARCH_TREE = [
 ];
 
 const OBJECTIVES = [
-  { id: "obj_stock_140", label: "Omple 140u de stock", target: 140, kind: "stock" },
-  { id: "obj_sell_200", label: "Ven 200u totals", target: 200, kind: "sold_units" },
-  { id: "obj_unlock_forge", label: "Desbloqueja Farga", target: 1, kind: "unlock_forge" },
-  { id: "obj_research_3", label: "Desbloqueja 3 recerques", target: 3, kind: "research_count" },
-  { id: "obj_contract_3", label: "Completa 3 contractes", target: 3, kind: "contracts_done" },
-  { id: "obj_modules_60", label: "Produeix 60 moduls", target: 60, kind: "produced_modules" },
-  { id: "obj_circuits_60", label: "Produeix 60 circuits", target: 60, kind: "produced_circuits" },
-  { id: "obj_money_5000", label: "Guanya 5.000$", target: 5000, kind: "money_earned" },
+  {
+    id: "obj_stock_140",
+    label: "Omple 140u de stock",
+    target: 140,
+    kind: "stock",
+    reward: { rp: 10, money: 0, buffs: [] },
+  },
+  {
+    id: "obj_sell_200",
+    label: "Ven 200u totals",
+    target: 200,
+    kind: "sold_units",
+    reward: { rp: 6, money: 180, buffs: [] },
+  },
+  {
+    id: "obj_unlock_forge",
+    label: "Desbloqueja Farga",
+    target: 1,
+    kind: "unlock_forge",
+    reward: { rp: 8, money: 0, buffs: [{ key: "market_pulse", seconds: 120 }] },
+  },
+  {
+    id: "obj_research_3",
+    label: "Desbloqueja 3 recerques",
+    target: 3,
+    kind: "research_count",
+    reward: { rp: 24, money: 0, buffs: [] },
+  },
+  {
+    id: "obj_contract_3",
+    label: "Completa 3 contractes",
+    target: 3,
+    kind: "contracts_done",
+    reward: { rp: 8, money: 240, buffs: [{ key: "contract_luck", seconds: 150 }] },
+  },
+  {
+    id: "obj_modules_60",
+    label: "Produeix 60 moduls",
+    target: 60,
+    kind: "produced_modules",
+    reward: { rp: 10, money: 0, buffs: [{ key: "production_burst", seconds: 160 }] },
+  },
+  {
+    id: "obj_circuits_60",
+    label: "Produeix 60 circuits",
+    target: 60,
+    kind: "produced_circuits",
+    reward: { rp: 10, money: 180, buffs: [{ key: "market_pulse", seconds: 150 }] },
+  },
+  {
+    id: "obj_money_5000",
+    label: "Guanya 5.000$",
+    target: 5000,
+    kind: "money_earned",
+    reward: { rp: 20, money: 420, buffs: [] },
+  },
 ];
+
+const BUFF_CATALOG = {
+  production_burst: {
+    label: "Turbo Produccio",
+    desc: "+20% produccio global",
+  },
+  market_pulse: {
+    label: "Pulse Mercat",
+    desc: "+12% valor de venda",
+  },
+  contract_luck: {
+    label: "Sort Contractes",
+    desc: "+premium i +recompensa contractes",
+  },
+};
+
+function buffDefinition(buffKey) {
+  return BUFF_CATALOG[buffKey] || null;
+}
+
+function buffState() {
+  if (!state || !state.progression) return {};
+  if (!state.progression.buffs) state.progression.buffs = {};
+  return state.progression.buffs;
+}
+
+function buffEndAt(buffKey) {
+  const buffs = buffState();
+  const value = buffs[buffKey];
+  return Number.isFinite(value) ? value : 0;
+}
+
+function isBuffActive(buffKey, atMs = Date.now()) {
+  return buffEndAt(buffKey) > atMs;
+}
+
+function buffRemainingSec(buffKey, atMs = Date.now()) {
+  return Math.max(0, Math.ceil((buffEndAt(buffKey) - atMs) / 1000));
+}
+
+function activeBuffEntries(atMs = Date.now()) {
+  const result = [];
+  for (const [key, meta] of Object.entries(BUFF_CATALOG)) {
+    const remainingSec = buffRemainingSec(key, atMs);
+    if (remainingSec <= 0) continue;
+    result.push({ key, ...meta, remainingSec });
+  }
+  return result;
+}
 
 function researchNodeById(id) {
   return RESEARCH_TREE.find((node) => node.id === id) || null;
@@ -193,8 +290,23 @@ function productionMultiplierFor(type) {
   if (type === "assembler" && hasResearch("rs_assembler_efficiency")) {
     multiplier *= 1.2;
   }
+  if (isBuffActive("production_burst")) {
+    multiplier *= 1.2;
+  }
 
   return multiplier;
+}
+
+function marketSellBonusMultiplier() {
+  return isBuffActive("market_pulse") ? 1.12 : 1;
+}
+
+function contractPremiumChanceBonus() {
+  return isBuffActive("contract_luck") ? 0.22 : 0;
+}
+
+function contractRewardBonusMultiplier() {
+  return isBuffActive("contract_luck") ? 1.14 : 1;
 }
 
 function cableMaxDistance() {

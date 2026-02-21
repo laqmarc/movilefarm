@@ -2,6 +2,73 @@
   return tier === "premium" ? "Premium" : "Normal";
 }
 
+const FLOW_RESOURCE_LABELS = {
+  all: "Tot",
+  stone: "Pedra",
+  wood: "Fusta",
+  iron: "Ferro",
+  coal: "Carbo",
+  copper: "Coure",
+  parts: "Peces",
+  steel: "Acer",
+  plates: "Plaques",
+  modules: "Moduls",
+  circuits: "Circuits",
+  frames: "Bastidors",
+};
+
+function flowResourceLabel(resourceKey) {
+  return FLOW_RESOURCE_LABELS[resourceKey] || resourceKey;
+}
+
+function flowEdgeLabel(edge, nodeMap) {
+  const [aId, bId] = edge.split("|");
+  const aNode = nodeMap.get(aId);
+  const bNode = nodeMap.get(bId);
+  if (!aNode || !bNode) return edge;
+  const aLabel = `${tileLabel(aNode)}(${aNode.row + 1},${aNode.col + 1})`;
+  const bLabel = `${tileLabel(bNode)}(${bNode.row + 1},${bNode.col + 1})`;
+  return `${aLabel}<->${bLabel}`;
+}
+
+function renderFlowLegend(flowResource, edgeIntensity, maxIntensity, snapshot) {
+  if (!dom.flowLegend) return;
+
+  const entries = [...edgeIntensity.entries()].sort((a, b) => b[1] - a[1]);
+  const topEntries = entries.slice(0, 4);
+  const totalRate = entries.reduce((sum, [, rate]) => sum + rate, 0);
+  const title = flowResource === "all" ? "Flux Total" : `Flux ${flowResourceLabel(flowResource)}`;
+
+  if (topEntries.length < 1 || maxIntensity <= 0) {
+    dom.flowLegend.innerHTML = `
+      <div class="legend-head"><span>${title}</span><strong>0.0 u/s</strong></div>
+      <div class="legend-sub">Sense flux actiu</div>
+    `;
+    return;
+  }
+
+  const rows = topEntries
+    .map(([edge, rate]) => {
+      const ratio = maxIntensity > 0 ? Math.max(0, Math.min(1, rate / maxIntensity)) : 0;
+      const pct = Math.round(ratio * 100);
+      const edgeLabel = flowEdgeLabel(edge, snapshot.nodeMap);
+      return `
+        <div class="legend-row">
+          <span class="legend-label">${edgeLabel}</span>
+          <strong class="legend-rate">${formatCompact(rate)} u/s</strong>
+        </div>
+        <div class="legend-bar"><div class="legend-fill" style="width:${pct}%"></div></div>
+      `;
+    })
+    .join("");
+
+  dom.flowLegend.innerHTML = `
+    <div class="legend-head"><span>${title}</span><strong>${formatCompact(totalRate)} u/s</strong></div>
+    <div class="legend-sub">Top cables</div>
+    ${rows}
+  `;
+}
+
 function renderContract() {
   const { offer, active } = state.contract;
   const labelByKey = {
@@ -32,6 +99,27 @@ function renderContract() {
       })
       .join("");
 
+  const chainRows = (contract) => {
+    if (!contract || contract.tier !== "premium") return "";
+    const hasLabel = typeof contract.chainLabel === "string" && contract.chainLabel.length > 0;
+    const steps = Array.isArray(contract.chainSteps) ? contract.chainSteps : [];
+    const rows = [];
+    if (hasLabel) {
+      rows.push(
+        `<div class="contract-line"><span>Cadena</span><strong>${contract.chainLabel}</strong></div>`
+      );
+    }
+    if (steps.length > 0) {
+      rows.push(
+        `<div class="contract-line"><span>Passos</span><strong>${steps.length}</strong></div>`
+      );
+      for (const step of steps) {
+        rows.push(`<div class="contract-line"><span>- ${step}</span></div>`);
+      }
+    }
+    return rows.join("");
+  };
+
   if (active) {
     const remainingSec = Number.isFinite(active.deadlineAt)
       ? Math.max(0, Math.ceil((active.deadlineAt - Date.now()) / 1000))
@@ -39,6 +127,7 @@ function renderContract() {
     dom.contractOffer.innerHTML = `
       <div class="contract-line"><span>Estat</span><strong>Actiu</strong></div>
       <div class="contract-line"><span>Tipus</span><strong>${contractTierLabel(active.tier)}</strong></div>
+      ${chainRows(active)}
       ${requirementRows(active, true)}
       <div class="contract-line"><span>Temps restant</span><strong>${remainingSec}s</strong></div>
       <div class="contract-line"><span>Recompensa</span><strong>${formatInt(active.reward)}$</strong></div>
@@ -51,6 +140,7 @@ function renderContract() {
     dom.contractOffer.innerHTML = `
       <div class="contract-line"><span>Estat</span><strong>Pendent</strong></div>
       <div class="contract-line"><span>Tipus</span><strong>${contractTierLabel(offer.tier)}</strong></div>
+      ${chainRows(offer)}
       ${requirementRows(offer, false)}
       <div class="contract-line"><span>Temps</span><strong>${offer.durationSec}s</strong></div>
       <div class="contract-line"><span>Recompensa</span><strong>${formatInt(offer.reward)}$</strong></div>
@@ -75,6 +165,26 @@ function nodeOutputResources(node) {
   const recipe = nodeRecipe(node);
   if (!recipe) return [];
   return Object.keys(recipe.outputs || {});
+}
+
+function nodeOutputRatesPerSec(node) {
+  if (!node) return {};
+  if (node.type === "miner") return { stone: minerRatePerSec(node.level) };
+  if (node.type === "wood_miner") return { wood: woodMinerRatePerSec(node.level) };
+  if (node.type === "iron_miner") return { iron: ironMinerRatePerSec(node.level) };
+  if (node.type === "coal_miner") return { coal: coalMinerRatePerSec(node.level) };
+  if (node.type === "copper_miner") return { copper: copperMinerRatePerSec(node.level) };
+
+  const cfg = processorConfig(node);
+  const recipe = nodeRecipe(node);
+  if (!cfg || !recipe) return {};
+
+  const scalePerSec = cfg.ratePerSec(node.level);
+  const out = {};
+  for (const [resourceKey, amountPerScale] of Object.entries(recipe.outputs || {})) {
+    out[resourceKey] = amountPerScale * scalePerSec;
+  }
+  return out;
 }
 
 function shortestPathEdgeKeys(startId, targetId, adjacency) {
@@ -115,32 +225,37 @@ function shortestPathEdgeKeys(startId, targetId, adjacency) {
 
 function buildFlowEdgesByResource(snapshot) {
   const map = new Map();
+  const totalByEdge = new Map();
   const warehouse = snapshot.warehouseNode;
-  if (!warehouse) return map;
+  if (!warehouse) {
+    return { byResource: map, totalByEdge };
+  }
 
   const adjacency = buildAdjacency();
   for (const node of state.nodes) {
     if (node.id === warehouse.id) continue;
     if (!snapshot.reachableFromWarehouse.has(node.id)) continue;
 
-    const outputs = nodeOutputResources(node);
-    if (outputs.length < 1) continue;
+    const outputs = nodeOutputRatesPerSec(node);
+    const outputEntries = Object.entries(outputs).filter(([, rate]) => rate > 0);
+    if (outputEntries.length < 1) continue;
 
     const pathEdges = shortestPathEdgeKeys(node.id, warehouse.id, adjacency);
     if (pathEdges.length < 1) continue;
 
-    for (const resourceKey of outputs) {
+    for (const [resourceKey, ratePerSec] of outputEntries) {
       if (!map.has(resourceKey)) {
-        map.set(resourceKey, new Set());
+        map.set(resourceKey, new Map());
       }
-      const set = map.get(resourceKey);
+      const edgeFlow = map.get(resourceKey);
       for (const edge of pathEdges) {
-        set.add(edge);
+        edgeFlow.set(edge, (edgeFlow.get(edge) || 0) + ratePerSec);
+        totalByEdge.set(edge, (totalByEdge.get(edge) || 0) + ratePerSec);
       }
     }
   }
 
-  return map;
+  return { byResource: map, totalByEdge };
 }
 
 function renderGrid(snapshot) {
@@ -172,9 +287,12 @@ function renderCables(snapshot) {
   const cellW = CONFIG.cellSizePx;
   const cellH = CONFIG.cellSizePx;
   const flowResource = state.ui.flowResource || "all";
-  const flowEdgesByResource = buildFlowEdgesByResource(snapshot);
-  const selectedFlowEdges =
-    flowResource === "all" ? null : flowEdgesByResource.get(flowResource) || new Set();
+  const flowIntensity = buildFlowEdgesByResource(snapshot);
+  const edgeIntensity =
+    flowResource === "all"
+      ? flowIntensity.totalByEdge
+      : flowIntensity.byResource.get(flowResource) || new Map();
+  const maxIntensity = Math.max(0, ...edgeIntensity.values());
 
   dom.cableLayer.setAttribute("viewBox", `0 0 ${width} ${height}`);
   dom.cableLayer.setAttribute("width", width);
@@ -193,19 +311,31 @@ function renderCables(snapshot) {
     const y2 = (nb.row + 0.5) * cellH;
     const active =
       snapshot.reachableFromWarehouse.has(a) && snapshot.reachableFromWarehouse.has(b);
+    const intensity = edgeIntensity.get(cable) || 0;
+    const ratio = maxIntensity > 0 ? intensity / maxIntensity : 0;
 
     const classList = ["cable-line"];
     if (active) classList.push("active");
+    let widthPx = active ? 4.8 : 4.2;
+    let opacity = active ? 0.95 : 0.62;
+
     if (flowResource !== "all") {
-      if (selectedFlowEdges.has(cable)) {
+      if (intensity > 0) {
         classList.push("flow-match", `flow-${flowResource}`);
+        widthPx = 4.8 + ratio * 5.4;
+        opacity = 0.5 + ratio * 0.5;
       } else {
         classList.push("flow-faded");
+        widthPx = 3.4;
+        opacity = 0.15;
       }
+    } else if (maxIntensity > 0) {
+      widthPx = (active ? 4.4 : 3.8) + ratio * 4.2;
+      opacity = active ? 0.45 + ratio * 0.55 : 0.26 + ratio * 0.38;
     }
 
     lines.push(
-      `<line class="${classList.join(" ")}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`
+      `<line class="${classList.join(" ")}" style="stroke-width:${widthPx.toFixed(2)}px;opacity:${opacity.toFixed(2)};" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`
     );
   }
 
@@ -232,6 +362,7 @@ function renderCables(snapshot) {
   }
 
   dom.cableLayer.innerHTML = lines.join("");
+  renderFlowLegend(flowResource, edgeIntensity, maxIntensity, snapshot);
 }
 
 function render() {
@@ -244,6 +375,8 @@ function render() {
   const selectedRecipe = selected ? nodeRecipeLabel(selected) : "-";
   const canChangeRecipe = canCycleRecipe(selected);
   const marketShift = Number(state.market.averageMultiplier) || 1;
+  const prestigeLevel = state.progression.prestigeLevel || 0;
+  const nextPrestigeBonusPct = Math.round((1 + (prestigeLevel + 1) * 0.12 - 1) * 100);
   const completedObjectives = completedObjectivesCount();
   const flowOption =
     flowFilterOptions().find((option) => option.key === state.ui.flowResource) || {
@@ -281,11 +414,12 @@ function render() {
   dom.maintenanceValue.textContent = `${formatCompact(state.economy.lastMaintenancePerSec)}$/s`;
   dom.marketShiftValue.textContent = `x${marketShift.toFixed(2)}`;
   dom.researchPointsValue.textContent = formatInt(Math.floor(state.research.points || 0));
-  dom.prestigeValue.textContent = formatInt(state.progression.prestigeLevel || 0);
+  dom.prestigeValue.textContent = formatInt(prestigeLevel);
   dom.objectivesValue.textContent = `${completedObjectives}/${OBJECTIVES.length}`;
   dom.modeLabel.textContent = modeLabel(state.ui.mode);
   dom.toggleAutoSellBtn.textContent = state.autoSellEnabled ? "Auto Tot ON" : "Auto Tot OFF";
   dom.cycleFlowFilterBtn.textContent = `Flux ${flowOption.label}`;
+  dom.prestigeBtn.textContent = `Prestigi +1 (${nextPrestigeBonusPct}%)`;
   const nextTech = nextTechnologyToUnlock();
   dom.techUnlockIronBtn.textContent = nextTech
     ? `Tech ${nextTech.label} ${formatInt(nextTech.cost)}$`
@@ -304,6 +438,7 @@ function render() {
   dom.toolCableModeBtn.classList.toggle("active", state.ui.mode === "connect");
   dom.toolCableDeleteModeBtn.classList.toggle("active", state.ui.mode === "disconnect");
   dom.toolInspectModeBtn.classList.toggle("active", state.ui.mode === "inspect");
+  dom.toolRecipeListBtn.classList.toggle("active", state.ui.recipePanelOpen);
   dom.buyMinerTypeBtn.classList.toggle("active", state.ui.buyType === "miner");
   dom.buyWoodMinerTypeBtn.classList.toggle("active", state.ui.buyType === "wood_miner");
   dom.buyIronMinerTypeBtn.classList.toggle("active", state.ui.buyType === "iron_miner");
@@ -321,6 +456,7 @@ function render() {
 
   dom.toolUpgradeBtn.disabled = !selected || selectedCost === null || state.money < selectedCost;
   dom.toolRecipeBtn.disabled = !selected || !canChangeRecipe;
+  dom.toolRecipeListBtn.disabled = false;
   dom.toolDeleteBtn.disabled = !isRemovableNode(selected);
   dom.toolSellBtn.disabled = totalStored < 1;
   dom.techUnlockIronBtn.disabled = !nextTech || state.money < nextTech.cost;
@@ -339,6 +475,7 @@ function render() {
 
   renderContract();
   renderResourcePanel();
+  renderRecipePanel();
   renderResearchTree();
   renderObjectivesPanel();
   renderTutorialOverlay();
