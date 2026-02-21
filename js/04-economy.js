@@ -339,13 +339,35 @@ function maxRecipeScaleByInputs(recipe, wantedScale) {
 }
 
 function processRecipeScale(recipe, wantedScale, freeCapacity) {
-  if (!recipe || wantedScale <= 0) return freeCapacity;
+  const targetScale = Math.max(0, wantedScale);
+  if (!recipe || targetScale <= 0) {
+    return {
+      freeCapacity,
+      byInputsScale: 0,
+      finalScale: 0,
+      wantedScale: targetScale,
+    };
+  }
 
-  const byInputsScale = maxRecipeScaleByInputs(recipe, wantedScale);
-  if (byInputsScale <= 0) return freeCapacity;
+  const byInputsScale = maxRecipeScaleByInputs(recipe, targetScale);
+  if (byInputsScale <= 0) {
+    return {
+      freeCapacity,
+      byInputsScale: 0,
+      finalScale: 0,
+      wantedScale: targetScale,
+    };
+  }
 
   const outputPerScale = recipeOutputPerScale(recipe);
-  if (outputPerScale <= 0) return freeCapacity;
+  if (outputPerScale <= 0) {
+    return {
+      freeCapacity,
+      byInputsScale,
+      finalScale: 0,
+      wantedScale: targetScale,
+    };
+  }
 
   const byCapacityScale = Math.max(0, freeCapacity / outputPerScale);
   const finalScale = Math.max(0, Math.min(byInputsScale, byCapacityScale));
@@ -373,21 +395,41 @@ function processRecipeScale(recipe, wantedScale, freeCapacity) {
   }
 
   const usedCapacity = outputPerScale * finalScale;
-  return Math.max(0, freeCapacity - usedCapacity);
+  return {
+    freeCapacity: Math.max(0, freeCapacity - usedCapacity),
+    byInputsScale,
+    finalScale,
+    wantedScale: targetScale,
+  };
 }
 
 function processConnectedRecipes(snapshot, dtSec, freeCapacity) {
   let free = freeCapacity;
   const recipeRates = snapshot.processorRates || {};
+  const previousActivity = state.economy.recipeActivity || {};
+  const nextActivity = {};
+  const now = Date.now();
 
   for (const [recipeId, ratePerSec] of Object.entries(recipeRates)) {
     if (ratePerSec <= 0) continue;
     const recipe = RECIPES[recipeId];
     if (!recipe) continue;
     const wantedScale = ratePerSec * dtSec;
-    free = processRecipeScale(recipe, wantedScale, free);
+    const result = processRecipeScale(recipe, wantedScale, free);
+    free = result.freeCapacity;
+
+    const utilization = result.wantedScale > 0
+      ? Math.max(0, Math.min(1, result.finalScale / result.wantedScale))
+      : 0;
+    const prev = previousActivity[recipeId];
+    const previousLastRun = prev && Number.isFinite(prev.lastRunAt) ? prev.lastRunAt : 0;
+    nextActivity[recipeId] = {
+      utilization,
+      lastRunAt: result.finalScale > 0 ? now : previousLastRun,
+    };
   }
 
+  state.economy.recipeActivity = nextActivity;
   return free;
 }
 
@@ -402,7 +444,10 @@ function gameTick(dtSec) {
     state.money = Math.max(0, state.money - upkeep * dtSec);
   }
 
-  if (!snapshot.warehouseNode) return;
+  if (!snapshot.warehouseNode) {
+    state.economy.recipeActivity = {};
+    return;
+  }
 
   const maxCapacity = capacity(snapshot.warehouseNode.level);
   let free = Math.max(0, maxCapacity - totalStoredResources());

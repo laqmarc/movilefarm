@@ -378,16 +378,30 @@ function nodeProgressVisual(node, snapshot) {
 
   const connected = snapshot.reachableFromWarehouse.has(node.id);
   const isProcessor = !!processorConfig(node);
+  const recipeId = isProcessor ? nodeRecipeId(node) : null;
+  const activityMap = (state.economy && state.economy.recipeActivity) || {};
+  const activity = recipeId ? activityMap[recipeId] : null;
+  const utilization = activity && Number.isFinite(activity.utilization)
+    ? Math.max(0, Math.min(1, activity.utilization))
+    : 0;
+  const lastRunAt = activity && Number.isFinite(activity.lastRunAt) ? activity.lastRunAt : 0;
+  const recentlyActive = Date.now() - lastRunAt <= 1200;
   const hasInputs = !isProcessor || processorHasAnyInputs(node);
-  const canRun = connected && hasInputs;
+  const canRun = connected && (!isProcessor || recentlyActive || hasInputs);
+  const activityScale = isProcessor
+    ? (recentlyActive ? Math.max(0.22, utilization) : (hasInputs ? 0.35 : 0))
+    : 1;
+  const effectiveCycleRate = cycleRate * activityScale;
   const phase = canRun
-    ? ((performance.now() / 1000) * cycleRate + tilePhaseOffset(node.id)) % 1
+    ? ((performance.now() / 1000) * effectiveCycleRate + tilePhaseOffset(node.id)) % 1
     : 0;
   const clamped = Math.max(0, Math.min(1, phase));
   const className = canRun ? "running" : "paused";
   const cycleSec = cycleRate > 0 ? 1 / cycleRate : 0;
   const title = canRun
-    ? `Cicle ${cycleSec.toFixed(2)}s`
+    ? isProcessor && recentlyActive
+      ? `Cicle ${cycleSec.toFixed(2)}s | ${Math.round(utilization * 100)}%`
+      : `Cicle ${cycleSec.toFixed(2)}s`
     : connected
       ? "Aturat (sense inputs)"
       : "Aturat (desconnectat)";
