@@ -316,6 +316,90 @@ function buildFlowEdgesByResource(snapshot) {
   return { byResource: map, totalByEdge };
 }
 
+const tilePhaseCache = new Map();
+
+function tilePhaseOffset(nodeId) {
+  if (!nodeId) return 0;
+  if (tilePhaseCache.has(nodeId)) return tilePhaseCache.get(nodeId);
+
+  let hash = 0;
+  for (let i = 0; i < nodeId.length; i += 1) {
+    hash = (hash * 31 + nodeId.charCodeAt(i)) >>> 0;
+  }
+
+  const offset = (hash % 1000) / 1000;
+  tilePhaseCache.set(nodeId, offset);
+  return offset;
+}
+
+function formatCycleSeconds(seconds) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "-";
+  if (seconds >= 10) return `${seconds.toFixed(0)}s`;
+  if (seconds >= 1) return `${seconds.toFixed(1)}s`;
+  return `${seconds.toFixed(2)}s`;
+}
+
+function nodeCycleRatePerSec(node) {
+  if (!node) return 0;
+  if (node.type === "miner") return minerRatePerSec(node.level);
+  if (node.type === "wood_miner") return woodMinerRatePerSec(node.level);
+  if (node.type === "sand_miner") return sandMinerRatePerSec(node.level);
+  if (node.type === "water_miner") return waterMinerRatePerSec(node.level);
+  if (node.type === "iron_miner") return ironMinerRatePerSec(node.level);
+  if (node.type === "coal_miner") return coalMinerRatePerSec(node.level);
+  if (node.type === "copper_miner") return copperMinerRatePerSec(node.level);
+  if (node.type === "oil_miner") return oilMinerRatePerSec(node.level);
+  if (node.type === "aluminum_miner") return aluminumMinerRatePerSec(node.level);
+  if (node.type === "quartz_miner") return quartzMinerRatePerSec(node.level);
+  if (node.type === "sulfur_miner") return sulfurMinerRatePerSec(node.level);
+  if (node.type === "gold_miner") return goldMinerRatePerSec(node.level);
+  if (node.type === "lithium_miner") return lithiumMinerRatePerSec(node.level);
+
+  const cfg = processorConfig(node);
+  return cfg ? cfg.ratePerSec(node.level) : 0;
+}
+
+function processorHasAnyInputs(node) {
+  const recipe = nodeRecipe(node);
+  if (!recipe) return false;
+  const entries = Object.entries(recipe.inputs || {});
+  if (entries.length < 1) return true;
+  return entries.every(([resourceKey, amount]) => {
+    if (amount <= 0) return true;
+    return (state.resources[resourceKey] || 0) > 0;
+  });
+}
+
+function nodeProgressVisual(node, snapshot) {
+  if (!node || !snapshot) return null;
+
+  const cycleRate = nodeCycleRatePerSec(node);
+  if (!Number.isFinite(cycleRate) || cycleRate <= 0) return null;
+
+  const connected = snapshot.reachableFromWarehouse.has(node.id);
+  const isProcessor = !!processorConfig(node);
+  const hasInputs = !isProcessor || processorHasAnyInputs(node);
+  const canRun = connected && hasInputs;
+  const phase = canRun
+    ? ((performance.now() / 1000) * cycleRate + tilePhaseOffset(node.id)) % 1
+    : 0;
+  const clamped = Math.max(0, Math.min(1, phase));
+  const className = canRun ? "running" : "paused";
+  const cycleSec = cycleRate > 0 ? 1 / cycleRate : 0;
+  const title = canRun
+    ? `Cicle ${cycleSec.toFixed(2)}s`
+    : connected
+      ? "Aturat (sense inputs)"
+      : "Aturat (desconnectat)";
+
+  return {
+    className,
+    ratio: clamped,
+    title,
+    cycleLabel: formatCycleSeconds(cycleSec),
+  };
+}
+
 function renderGrid(snapshot) {
   const nodesByCell = new Map(
     state.nodes.map((node) => [cellKey(node.row, node.col), node])
@@ -333,7 +417,27 @@ function renderGrid(snapshot) {
     cell.classList.toggle("selected", isSelected);
     cell.classList.toggle("pending", isPending);
     cell.classList.toggle("hover-target", isHoverTarget);
-    cell.innerHTML = node ? `<div class="tile ${node.type}">${tileLabel(node)}</div>` : "";
+    if (!node) {
+      cell.innerHTML = "";
+      continue;
+    }
+
+    const progress = nodeProgressVisual(node, snapshot);
+    const progressHtml = progress
+      ? `
+        <span class="tile-cycle ${progress.className}" title="${progress.title}">${progress.cycleLabel}</span>
+        <div class="tile-progress ${progress.className}" title="${progress.title}">
+          <div class="tile-progress-fill" style="transform: scaleX(${progress.ratio.toFixed(3)});"></div>
+        </div>
+      `
+      : "";
+
+    cell.innerHTML = `
+      <div class="tile ${node.type}">
+        <span class="tile-label">${tileLabel(node)}</span>
+        ${progressHtml}
+      </div>
+    `;
   }
 
   renderCables(snapshot);

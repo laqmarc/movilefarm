@@ -386,10 +386,65 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 4px 6px 10px;
   font-size: clamp(0.7rem, 1.6vw, 0.86rem);
   font-weight: 700;
   color: #fff;
   user-select: none;
+  overflow: hidden;
+}
+
+.tile-label {
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.24);
+}
+
+.tile-cycle {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-height: 12px;
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.24);
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 0.56rem;
+  line-height: 1;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.tile-cycle.paused {
+  background: rgba(0, 0, 0, 0.16);
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.tile-progress {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  bottom: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.32);
+  overflow: hidden;
+}
+
+.tile-progress-fill {
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, #c7f5dd, #f0ffe0);
+  box-shadow: 0 0 8px rgba(207, 255, 221, 0.45);
+}
+
+.tile-progress.paused {
+  opacity: 0.45;
+}
+
+.tile-progress.paused .tile-progress-fill {
+  background: linear-gradient(90deg, #d8d8d8, #efefef);
+  box-shadow: none;
 }
 
 .tile.miner {
