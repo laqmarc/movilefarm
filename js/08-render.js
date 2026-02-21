@@ -377,7 +377,9 @@ function nodeProgressVisual(node, snapshot) {
   const cycleRate = nodeCycleRatePerSec(node);
   if (!Number.isFinite(cycleRate) || cycleRate <= 0) return null;
 
-  const connected = snapshot.reachableFromWarehouse.has(node.id);
+  const connected =
+    snapshot.reachableFromWarehouse.has(node.id) ||
+    (snapshot.reachableFromMarket && snapshot.reachableFromMarket.has(node.id));
   const isProcessor = !!processorConfig(node);
   const recipeId = isProcessor ? nodeRecipeId(node) : null;
   const activityMap = (state.economy && state.economy.recipeActivity) || {};
@@ -486,8 +488,13 @@ function renderCables(snapshot) {
     const y1 = (na.row + 0.5) * cellH;
     const x2 = (nb.col + 0.5) * cellW;
     const y2 = (nb.row + 0.5) * cellH;
-    const active =
-      snapshot.reachableFromWarehouse.has(a) && snapshot.reachableFromWarehouse.has(b);
+    const aLive =
+      snapshot.reachableFromWarehouse.has(a) ||
+      (snapshot.reachableFromMarket && snapshot.reachableFromMarket.has(a));
+    const bLive =
+      snapshot.reachableFromWarehouse.has(b) ||
+      (snapshot.reachableFromMarket && snapshot.reachableFromMarket.has(b));
+    const active = aLive && bLive;
     const intensity = edgeIntensity.get(cable) || 0;
     const ratio = maxIntensity > 0 ? intensity / maxIntensity : 0;
 

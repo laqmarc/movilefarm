@@ -433,6 +433,32 @@ function processConnectedRecipes(snapshot, dtSec, freeCapacity) {
   return free;
 }
 
+function sellDirectMarketResources(snapshot, dtSec) {
+  if (!snapshot || !snapshot.marketNode) return { sold: 0, earned: 0 };
+  const rates = snapshot.directMarketRates || {};
+  let sold = 0;
+  let earned = 0;
+
+  for (const [resourceKey, ratePerSec] of Object.entries(rates)) {
+    if (!Number.isFinite(ratePerSec) || ratePerSec <= 0) continue;
+    const qty = ratePerSec * dtSec;
+    if (qty <= 0) continue;
+    const price = currentResourcePrice(resourceKey);
+    sold += qty;
+    earned += qty * price;
+    state.progression.produced[resourceKey] = (state.progression.produced[resourceKey] || 0) + qty;
+  }
+
+  if (earned > 0) {
+    state.money += earned;
+    state.progression.totalMoneyEarned += earned;
+    state.progression.totalSoldUnits += sold;
+    state.research.points += (earned / 55) * researchPointsMultiplier();
+  }
+
+  return { sold, earned };
+}
+
 function gameTick(dtSec) {
   updateContractTick();
   updateMarketTick(dtSec);
@@ -446,6 +472,9 @@ function gameTick(dtSec) {
 
   if (!snapshot.warehouseNode) {
     state.economy.recipeActivity = {};
+    sellDirectMarketResources(snapshot, dtSec);
+    updateObjectivesProgress();
+    updateTutorialProgress();
     return;
   }
 
@@ -557,6 +586,7 @@ function gameTick(dtSec) {
   free = Math.max(0, free - storedLithium);
 
   free = processConnectedRecipes(snapshot, dtSec, free);
+  sellDirectMarketResources(snapshot, dtSec);
 
   if (state.autoSellEnabled && snapshot.marketConnected && snapshot.marketNode) {
     const autoSellUnits = Math.min(

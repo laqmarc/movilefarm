@@ -8,19 +8,19 @@ function resourceDisplayEntries() {
 function resourceRatesPerSec() {
   const snapshot = getNetworkSnapshot();
   const rates = {
-    stone: snapshot.stoneRate || 0,
-    wood: snapshot.woodRate || 0,
-    sand: snapshot.sandRate || 0,
-    water: snapshot.waterRate || 0,
-    iron: snapshot.ironRate || 0,
-    coal: snapshot.coalRate || 0,
-    copper: snapshot.copperRate || 0,
-    oil: snapshot.oilRate || 0,
-    aluminum: snapshot.aluminumRate || 0,
-    quartz: snapshot.quartzRate || 0,
-    sulfur: snapshot.sulfurRate || 0,
-    gold: snapshot.goldRate || 0,
-    lithium: snapshot.lithiumRate || 0,
+    stone: (snapshot.stoneRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.stone) || 0),
+    wood: (snapshot.woodRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.wood) || 0),
+    sand: (snapshot.sandRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.sand) || 0),
+    water: (snapshot.waterRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.water) || 0),
+    iron: (snapshot.ironRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.iron) || 0),
+    coal: (snapshot.coalRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.coal) || 0),
+    copper: (snapshot.copperRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.copper) || 0),
+    oil: (snapshot.oilRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.oil) || 0),
+    aluminum: (snapshot.aluminumRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.aluminum) || 0),
+    quartz: (snapshot.quartzRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.quartz) || 0),
+    sulfur: (snapshot.sulfurRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.sulfur) || 0),
+    gold: (snapshot.goldRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.gold) || 0),
+    lithium: (snapshot.lithiumRate || 0) + ((snapshot.directMarketRates && snapshot.directMarketRates.lithium) || 0),
   };
 
   for (const [recipeId, scalePerSec] of Object.entries(snapshot.processorRates || {})) {

@@ -405,6 +405,11 @@ function getNetworkSnapshot() {
   const reachableFromWarehouse = warehouseNode
     ? reachableFrom(warehouseNode.id, adjacency)
     : new Set();
+  const reachableFromMarket = marketNode
+    ? reachableFrom(marketNode.id, adjacency)
+    : new Set();
+  const connectedToMarketOnly = (node) =>
+    reachableFromMarket.has(node.id) && !reachableFromWarehouse.has(node.id);
 
   const connectedStoneMiners = minerNodes().filter((node) =>
     reachableFromWarehouse.has(node.id)
@@ -497,6 +502,61 @@ function getNetworkSnapshot() {
     (sum, miner) => sum + lithiumMinerRatePerSec(miner.level),
     0
   );
+  const marketStoneRate = minerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + minerRatePerSec(miner.level), 0);
+  const marketWoodRate = woodMinerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + woodMinerRatePerSec(miner.level), 0);
+  const marketSandRate = sandMinerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + sandMinerRatePerSec(miner.level), 0);
+  const marketWaterRate = waterMinerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + waterMinerRatePerSec(miner.level), 0);
+  const marketIronRate = ironMinerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + ironMinerRatePerSec(miner.level), 0);
+  const marketCoalRate = coalMinerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + coalMinerRatePerSec(miner.level), 0);
+  const marketCopperRate = copperMinerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + copperMinerRatePerSec(miner.level), 0);
+  const marketOilRate = oilMinerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + oilMinerRatePerSec(miner.level), 0);
+  const marketAluminumRate = aluminumMinerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + aluminumMinerRatePerSec(miner.level), 0);
+  const marketQuartzRate = quartzMinerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + quartzMinerRatePerSec(miner.level), 0);
+  const marketSulfurRate = sulfurMinerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + sulfurMinerRatePerSec(miner.level), 0);
+  const marketGoldRate = goldMinerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + goldMinerRatePerSec(miner.level), 0);
+  const marketLithiumRate = lithiumMinerNodes()
+    .filter((node) => connectedToMarketOnly(node))
+    .reduce((sum, miner) => sum + lithiumMinerRatePerSec(miner.level), 0);
+  const directMarketRates = {
+    stone: marketStoneRate,
+    wood: marketWoodRate,
+    sand: marketSandRate,
+    water: marketWaterRate,
+    iron: marketIronRate,
+    coal: marketCoalRate,
+    copper: marketCopperRate,
+    oil: marketOilRate,
+    aluminum: marketAluminumRate,
+    quartz: marketQuartzRate,
+    sulfur: marketSulfurRate,
+    gold: marketGoldRate,
+    lithium: marketLithiumRate,
+  };
+  const directMarketRate = Object.values(directMarketRates).reduce((sum, rate) => sum + rate, 0);
   const processorRates = {};
   for (const node of state.nodes) {
     if (!reachableFromWarehouse.has(node.id)) continue;
@@ -535,6 +595,7 @@ function getNetworkSnapshot() {
     warehouseNode,
     marketNode,
     reachableFromWarehouse,
+    reachableFromMarket,
     connectedRate:
       stoneRate +
       woodRate +
@@ -549,7 +610,8 @@ function getNetworkSnapshot() {
       sulfurRate +
       goldRate +
       lithiumRate +
-      processingRate,
+      processingRate +
+      directMarketRate,
     stoneRate,
     woodRate,
     sandRate,
@@ -566,6 +628,7 @@ function getNetworkSnapshot() {
     forgeRate,
     assemblerRate,
     processorRates,
+    directMarketRates,
     marketConnected: !!(marketNode && reachableFromWarehouse.has(marketNode.id)),
     nodeMap: new Map(state.nodes.map((node) => [node.id, node])),
   };
