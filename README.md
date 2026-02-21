@@ -33,6 +33,8 @@ Despres visita `http://localhost:5500`.
 - Venda manual i auto-venda unificada per tots els recursos.
 - Connexio per drag tactile (`Mode Cable`) i per taps.
 - Mode `Tallar` per eliminar cables explicitament.
+- Boto `Reinici` per esborrar persistencia i tornar a estat inicial.
+- Contractes multi-recurs (entrega parcial i progressiva).
 - Snap assistit en drag per facilitar connexions amb el dit.
 - Cables amb cost economic i distancia maxima.
 - Nou item `connector` per construir rutes.
@@ -47,5 +49,6 @@ Despres visita `http://localhost:5500`.
 ## Fitxers clau
 - `index.html`: estructura UI.
 - `styles.css`: estil i responsive.
-- `script.js`: simulacio i estat del joc.
+- `script.js`: loader de compatibilitat.
+- `js/01-bootstrap.js` a `js/09-events-loop.js`: codi principal separat per domini.
 - `ROADMAP.md`: pla d'evolucio.

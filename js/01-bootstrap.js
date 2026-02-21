@@ -1,0 +1,278 @@
+﻿const SAVE_KEY = "movile-farm-save-v4";
+
+const CONFIG = {
+  gridRows: 18,
+  gridCols: 18,
+  cellSizePx: 62,
+  panDragThresholdPx: 10,
+  minZoom: 0.7,
+  maxZoom: 2.2,
+  autosaveMs: 4000,
+  stonePrice: 1,
+  woodPrice: 2,
+  ironPrice: 4,
+  coalPrice: 3,
+  copperPrice: 5,
+  partsPrice: 9,
+  steelPrice: 11,
+  platesPrice: 10,
+  modulesPrice: 18,
+  circuitsPrice: 22,
+  framesPrice: 16,
+  ironUnlockCost: 320,
+  forgeUnlockCost: 560,
+  advancedMinesUnlockCost: 820,
+  assemblerUnlockCost: 1200,
+  autoSellRatePerSec: 8,
+  initialMoney: 170,
+  minerBaseCost: 30,
+  minerCostScale: 1.45,
+  woodMinerBaseCost: 52,
+  woodMinerCostScale: 1.48,
+  ironMinerBaseCost: 85,
+  ironMinerCostScale: 1.52,
+  coalMinerBaseCost: 110,
+  coalMinerCostScale: 1.5,
+  copperMinerBaseCost: 122,
+  copperMinerCostScale: 1.52,
+  forgeBaseCost: 145,
+  forgeCostScale: 1.55,
+  assemblerBaseCost: 210,
+  assemblerCostScale: 1.54,
+  forgeWoodPerUnit: 0.7,
+  forgeIronPerUnit: 0.45,
+  forgePartsPerUnit: 0.62,
+  forgeSteelIronPerUnit: 0.82,
+  forgeSteelCoalPerUnit: 0.58,
+  forgeSteelPerUnit: 0.5,
+  forgePlatesCopperPerUnit: 0.88,
+  forgePlatesCoalPerUnit: 0.42,
+  forgePlatesPerUnit: 0.55,
+  assemblerPartsPerUnit: 0.78,
+  assemblerPlatesPerUnit: 0.65,
+  assemblerModulesPerUnit: 0.48,
+  assemblerCircuitPartsPerUnit: 0.72,
+  assemblerCircuitCopperPerUnit: 0.8,
+  assemblerCircuitsPerUnit: 0.52,
+  assemblerFrameSteelPerUnit: 0.64,
+  assemblerFramePlatesPerUnit: 0.7,
+  assemblerFramesPerUnit: 0.5,
+  poleBaseCost: 18,
+  poleCostScale: 1.22,
+  cableCost: 6,
+  cableMaxDistance: 3,
+  cableMaintenancePerSec: 0.06,
+  dragSnapRadiusPx: 54,
+  minerUpgradeBaseCost: 65,
+  minerUpgradeScale: 1.8,
+  warehouseUpgradeBaseCost: 70,
+  warehouseUpgradeScale: 1.75,
+  marketUpgradeBaseCost: 60,
+  marketUpgradeScale: 1.65,
+  baseCapacity: 140,
+  capacityPerWarehouseLevel: 110,
+};
+
+const dom = {
+  moneyValue: document.getElementById("moneyValue"),
+  stoneValue: document.getElementById("stoneValue"),
+  productionValue: document.getElementById("productionValue"),
+  resourceStrip: document.getElementById("resourceStrip"),
+  resourcePanel: document.getElementById("resourcePanel"),
+  minerCostValue: document.getElementById("minerCostValue"),
+  woodMinerCostValue: document.getElementById("woodMinerCostValue"),
+  ironMinerCostValue: document.getElementById("ironMinerCostValue"),
+  coalMinerCostValue: document.getElementById("coalMinerCostValue"),
+  copperMinerCostValue: document.getElementById("copperMinerCostValue"),
+  forgeCostValue: document.getElementById("forgeCostValue"),
+  assemblerCostValue: document.getElementById("assemblerCostValue"),
+  poleCostValue: document.getElementById("poleCostValue"),
+  cableCostValue: document.getElementById("cableCostValue"),
+  cableRangeValue: document.getElementById("cableRangeValue"),
+  autoSellValue: document.getElementById("autoSellValue"),
+  maintenanceValue: document.getElementById("maintenanceValue"),
+  modeLabel: document.getElementById("modeLabel"),
+  mapBoard: document.getElementById("mapBoard"),
+  mapWorld: document.getElementById("mapWorld"),
+  gridCells: document.getElementById("gridCells"),
+  cableLayer: document.getElementById("cableLayer"),
+  toolBuyModeBtn: document.getElementById("toolBuyModeBtn"),
+  toolCableModeBtn: document.getElementById("toolCableModeBtn"),
+  toolCableDeleteModeBtn: document.getElementById("toolCableDeleteModeBtn"),
+  toolInspectModeBtn: document.getElementById("toolInspectModeBtn"),
+  toolUpgradeBtn: document.getElementById("toolUpgradeBtn"),
+  toolRecipeBtn: document.getElementById("toolRecipeBtn"),
+  toolDeleteBtn: document.getElementById("toolDeleteBtn"),
+  techUnlockIronBtn: document.getElementById("techUnlockIronBtn"),
+  toolSellBtn: document.getElementById("toolSellBtn"),
+  buyMinerTypeBtn: document.getElementById("buyMinerTypeBtn"),
+  buyWoodMinerTypeBtn: document.getElementById("buyWoodMinerTypeBtn"),
+  buyIronMinerTypeBtn: document.getElementById("buyIronMinerTypeBtn"),
+  buyCoalMinerTypeBtn: document.getElementById("buyCoalMinerTypeBtn"),
+  buyCopperMinerTypeBtn: document.getElementById("buyCopperMinerTypeBtn"),
+  buyForgeTypeBtn: document.getElementById("buyForgeTypeBtn"),
+  buyAssemblerTypeBtn: document.getElementById("buyAssemblerTypeBtn"),
+  buyPoleTypeBtn: document.getElementById("buyPoleTypeBtn"),
+  toggleAutoSellBtn: document.getElementById("toggleAutoSellBtn"),
+  sell10Btn: document.getElementById("sell10Btn"),
+  sellAllBtn: document.getElementById("sellAllBtn"),
+  selectedTypeValue: document.getElementById("selectedTypeValue"),
+  selectedLevelValue: document.getElementById("selectedLevelValue"),
+  selectedUpgradeCostValue: document.getElementById("selectedUpgradeCostValue"),
+  selectedRecipeValue: document.getElementById("selectedRecipeValue"),
+  clearSelectionBtn: document.getElementById("clearSelectionBtn"),
+  resetPersistenceBtn: document.getElementById("resetPersistenceBtn"),
+  contractOffer: document.getElementById("contractOffer"),
+  acceptContractBtn: document.getElementById("acceptContractBtn"),
+  deliverContractBtn: document.getElementById("deliverContractBtn"),
+  rerollContractBtn: document.getElementById("rerollContractBtn"),
+  toast: document.getElementById("toast"),
+};
+
+let state = null;
+let lastTick = 0;
+let elapsedSinceSave = 0;
+let toastTimer = null;
+const cellRefs = new Map();
+const pointerState = {
+  activePointerId: null,
+  points: new Map(),
+  pointerDown: false,
+  panActive: false,
+  moved: false,
+  pinchActive: false,
+  startX: 0,
+  startY: 0,
+  startCameraX: 0,
+  startCameraY: 0,
+  pinchStartDistance: 0,
+  pinchStartZoom: 1,
+  pinchAnchorWorldX: 0,
+  pinchAnchorWorldY: 0,
+};
+
+function createDefaultState() {
+  return {
+    money: CONFIG.initialMoney,
+    resources: {
+      stone: 0,
+      wood: 0,
+      iron: 0,
+      coal: 0,
+      copper: 0,
+      parts: 0,
+      steel: 0,
+      plates: 0,
+      modules: 0,
+      circuits: 0,
+      frames: 0,
+      wastedStone: 0,
+      wastedWood: 0,
+      wastedIron: 0,
+      wastedCoal: 0,
+      wastedCopper: 0,
+      wastedParts: 0,
+      wastedSteel: 0,
+      wastedPlates: 0,
+      wastedModules: 0,
+      wastedCircuits: 0,
+      wastedFrames: 0,
+    },
+    nodes: [
+      { id: "warehouse-1", type: "warehouse", row: 3, col: 2, level: 1, fixed: true },
+      { id: "market-1", type: "market", row: 3, col: 5, level: 1, fixed: true },
+      { id: "miner-1", type: "miner", row: 1, col: 1, level: 1, fixed: false },
+    ],
+    cables: [edgeKey("miner-1", "warehouse-1")],
+    nextMinerId: 2,
+    nextWoodMinerId: 1,
+    nextIronMinerId: 1,
+    nextCoalMinerId: 1,
+    nextCopperMinerId: 1,
+    nextForgeId: 1,
+    nextAssemblerId: 1,
+    nextPoleId: 1,
+    autoSellEnabled: false,
+    tech: {
+      ironUnlocked: false,
+      forgeUnlocked: false,
+      advancedMinesUnlocked: false,
+      assemblerUnlocked: false,
+    },
+    camera: {
+      x: 0,
+      y: 0,
+      zoom: 1,
+    },
+    economy: {
+      lastMaintenancePerSec: 0,
+    },
+    contract: {
+      offer: createContractOffer(1),
+      active: null,
+      lastId: 1,
+    },
+    ui: {
+      mode: "inspect",
+      buyType: "miner",
+      resourcePanelOpen: false,
+      selectedNodeId: null,
+      pendingSourceId: null,
+      drag: {
+        active: false,
+        sourceId: null,
+        pointerX: 0,
+        pointerY: 0,
+        hoverCellKey: null,
+        snapTargetId: null,
+      },
+    },
+  };
+}
+
+function defaultUi() {
+  return createDefaultState().ui;
+}
+
+function loadState() {
+  const fallback = createDefaultState();
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) return fallback;
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return fallback;
+
+    return {
+      ...fallback,
+      ...parsed,
+      resources: { ...fallback.resources, ...(parsed.resources || {}) },
+      nodes: Array.isArray(parsed.nodes) ? parsed.nodes : fallback.nodes,
+      cables: Array.isArray(parsed.cables) ? parsed.cables : fallback.cables,
+      camera: { ...fallback.camera, ...(parsed.camera || {}) },
+      tech: { ...fallback.tech, ...(parsed.tech || {}) },
+      economy: { ...fallback.economy, ...(parsed.economy || {}) },
+      contract: {
+        ...fallback.contract,
+        ...(parsed.contract || {}),
+        offer: normalizeContract((parsed.contract && parsed.contract.offer) || fallback.contract.offer),
+        active: normalizeContract((parsed.contract && parsed.contract.active) || null),
+      },
+      ui: {
+        ...defaultUi(),
+        ...(parsed.ui || {}),
+        drag: {
+          ...defaultUi().drag,
+          ...((parsed.ui && parsed.ui.drag) || {}),
+        },
+      },
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function saveState() {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+}
+

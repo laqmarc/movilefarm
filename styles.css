@@ -505,6 +505,14 @@ button:disabled {
   background: #9d3e3e;
 }
 
+#resetPersistenceBtn {
+  background: #8e3a3a;
+}
+
+#resetPersistenceBtn:hover:not(:disabled) {
+  background: #a24646;
+}
+
 #techUnlockIronBtn {
   background: #7a6531;
 }

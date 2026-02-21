@@ -63,6 +63,7 @@ Construir un joc web d'automatitzacio on el jugador crea una xarxa de maquines, 
 - [x] Separar compra en `Recursos` i `Maquines`.
 - [x] Afegir mode explicit per tallar/esborrar cables.
 - [x] Afegir mes receptes a `Assembler` (selector de recepta).
-- [ ] Ajustar balance de preus/produccio de la nova cadena.
-- [ ] Contractes multi-recurs (no nomes pedra).
+- [x] Ajustar balance de preus/produccio de la nova cadena.
+- [x] Contractes multi-recurs (no nomes pedra).
+- [x] Refactor codi en multiples fitxers (`js/01..09`) per mantenibilitat.
 - [ ] Filtre visual de flux per tipus de recurs.
