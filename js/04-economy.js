@@ -499,9 +499,10 @@ function sellDirectMarketResources(snapshot, dtSec) {
     return { sold: 0, earned: 0 };
   }
 
-  const marketOnlyNodes = state.nodes.filter((node) =>
-    snapshot.reachableFromMarket.has(node.id) && !snapshot.reachableFromWarehouse.has(node.id)
-  );
+  const directIds = snapshot.directMarketNodeIds;
+  const marketOnlyNodes = directIds
+    ? state.nodes.filter((node) => directIds.has(node.id))
+    : [];
 
   if (marketOnlyNodes.length < 1) {
     state.economy.recipeActivityDirect = {};

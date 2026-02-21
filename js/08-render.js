@@ -383,14 +383,12 @@ function nodeProgressVisual(node, snapshot) {
   const isProcessor = !!processorConfig(node);
   const recipeId = isProcessor ? nodeRecipeId(node) : null;
   const inWarehouseNetwork = snapshot.reachableFromWarehouse.has(node.id);
-  const inMarketOnlyNetwork =
-    !inWarehouseNetwork &&
-    snapshot.reachableFromMarket &&
-    snapshot.reachableFromMarket.has(node.id);
+  const inMarketDirectNetwork =
+    snapshot.directMarketNodeIds && snapshot.directMarketNodeIds.has(node.id);
   const warehouseActivityMap = (state.economy && state.economy.recipeActivity) || {};
   const directActivityMap = (state.economy && state.economy.recipeActivityDirect) || {};
   const activity = recipeId
-    ? (inMarketOnlyNetwork ? directActivityMap[recipeId] : warehouseActivityMap[recipeId])
+    ? (inMarketDirectNetwork ? directActivityMap[recipeId] : warehouseActivityMap[recipeId])
     : null;
   const utilization = activity && Number.isFinite(activity.utilization)
     ? Math.max(0, Math.min(1, activity.utilization))

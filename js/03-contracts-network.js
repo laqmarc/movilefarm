@@ -408,47 +408,49 @@ function getNetworkSnapshot() {
   const reachableFromMarket = marketNode
     ? reachableFrom(marketNode.id, adjacency)
     : new Set();
-  const connectedToMarketOnly = (node) =>
-    reachableFromMarket.has(node.id) && !reachableFromWarehouse.has(node.id);
+  const directMarketNodeIds = marketNode
+    ? new Set(adjacency.get(marketNode.id) || [])
+    : new Set();
+  const isDirectToMarket = (node) => directMarketNodeIds.has(node.id);
 
   const connectedStoneMiners = minerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const connectedWoodMiners = woodMinerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const connectedSandMiners = sandMinerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const connectedWaterMiners = waterMinerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const connectedIronMiners = ironMinerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const connectedCoalMiners = coalMinerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const connectedCopperMiners = copperMinerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const connectedOilMiners = oilMinerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const connectedAluminumMiners = aluminumMinerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const connectedQuartzMiners = quartzMinerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const connectedSulfurMiners = sulfurMinerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const connectedGoldMiners = goldMinerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const connectedLithiumMiners = lithiumMinerNodes().filter((node) =>
-    reachableFromWarehouse.has(node.id)
+    reachableFromWarehouse.has(node.id) && !isDirectToMarket(node)
   );
   const stoneRate = connectedStoneMiners.reduce(
     (sum, miner) => sum + minerRatePerSec(miner.level),
@@ -503,43 +505,43 @@ function getNetworkSnapshot() {
     0
   );
   const marketStoneRate = minerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + minerRatePerSec(miner.level), 0);
   const marketWoodRate = woodMinerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + woodMinerRatePerSec(miner.level), 0);
   const marketSandRate = sandMinerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + sandMinerRatePerSec(miner.level), 0);
   const marketWaterRate = waterMinerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + waterMinerRatePerSec(miner.level), 0);
   const marketIronRate = ironMinerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + ironMinerRatePerSec(miner.level), 0);
   const marketCoalRate = coalMinerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + coalMinerRatePerSec(miner.level), 0);
   const marketCopperRate = copperMinerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + copperMinerRatePerSec(miner.level), 0);
   const marketOilRate = oilMinerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + oilMinerRatePerSec(miner.level), 0);
   const marketAluminumRate = aluminumMinerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + aluminumMinerRatePerSec(miner.level), 0);
   const marketQuartzRate = quartzMinerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + quartzMinerRatePerSec(miner.level), 0);
   const marketSulfurRate = sulfurMinerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + sulfurMinerRatePerSec(miner.level), 0);
   const marketGoldRate = goldMinerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + goldMinerRatePerSec(miner.level), 0);
   const marketLithiumRate = lithiumMinerNodes()
-    .filter((node) => connectedToMarketOnly(node))
+    .filter((node) => isDirectToMarket(node))
     .reduce((sum, miner) => sum + lithiumMinerRatePerSec(miner.level), 0);
   const directMarketRates = {
     stone: marketStoneRate,
@@ -558,7 +560,7 @@ function getNetworkSnapshot() {
   };
   const marketOnlyProcessorRates = {};
   for (const node of state.nodes) {
-    if (!connectedToMarketOnly(node)) continue;
+    if (!isDirectToMarket(node)) continue;
     const processor = PROCESSOR_NODE_TYPES[node.type];
     if (!processor) continue;
     const recipeId = nodeRecipeId(node);
@@ -580,6 +582,7 @@ function getNetworkSnapshot() {
   const processorRates = {};
   for (const node of state.nodes) {
     if (!reachableFromWarehouse.has(node.id)) continue;
+    if (isDirectToMarket(node)) continue;
     const processor = PROCESSOR_NODE_TYPES[node.type];
     if (!processor) continue;
     const recipeId = nodeRecipeId(node);
@@ -616,6 +619,7 @@ function getNetworkSnapshot() {
     marketNode,
     reachableFromWarehouse,
     reachableFromMarket,
+    directMarketNodeIds,
     connectedRate:
       stoneRate +
       woodRate +
