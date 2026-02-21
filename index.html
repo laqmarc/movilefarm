@@ -1,111 +1,101 @@
 <!doctype html>
 <html lang="ca">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Movile Farm</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="background-shape"></div>
-    <main class="app">
-      <header class="topbar card">
-        <div>
-          <h1>Movile Farm</h1>
-          <p class="subtitle">Prototype d'automatitzacio: miner, magatzem i venda</p>
-        </div>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movile Farm</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <main class="app">
+    <header class="hud-top card">
+      <div class="hud-core">
         <div class="stats">
           <div class="stat">
-            <span>Diners</span>
+            <span>$</span>
             <strong id="moneyValue">0</strong>
           </div>
+        <div class="stat">
+          <span>Stock</span>
+          <strong id="stoneValue">0 / 0</strong>
+        </div>
           <div class="stat">
-            <span>Pedra</span>
-            <strong id="stoneValue">0 / 0</strong>
-          </div>
-          <div class="stat">
-            <span>Produccio</span>
+            <span>Prod</span>
             <strong id="productionValue">0 /s</strong>
           </div>
         </div>
-      </header>
+        <span id="modeLabel" class="badge">Seleccio</span>
+      </div>
+      <div id="resourceStrip" class="resource-strip"></div>
+    </header>
+    <aside id="resourcePanel" class="resource-panel hidden"></aside>
 
-      <section class="grid">
-        <article class="card">
-          <h2>Maquines</h2>
-          <p class="muted">Primer item: miner que extreu pedra.</p>
-          <div class="info-row">
-            <span>Miners</span>
-            <strong id="minerCount">0</strong>
+    <section class="map-stage">
+      <article class="card map-card">
+        <div id="mapBoard" class="map-board">
+          <div id="mapWorld" class="map-world">
+            <svg id="cableLayer" class="cable-layer"></svg>
+            <div id="gridCells" class="grid-cells"></div>
           </div>
-          <div class="info-row">
-            <span>Nivell miner</span>
-            <strong id="minerLevel">1</strong>
-          </div>
-          <div class="actions">
-            <button id="buyMinerBtn"></button>
-            <button id="upgradeMinerBtn"></button>
-          </div>
-        </article>
+        </div>
+      </article>
+    </section>
 
-        <article class="card">
-          <h2>Magatzem</h2>
-          <p class="muted">La pedra s'acumula aqui abans de vendre.</p>
-          <div class="info-row">
-            <span>Nivell</span>
-            <strong id="warehouseLevel">1</strong>
-          </div>
-          <div class="info-row">
-            <span>Capacitat</span>
-            <strong id="capacityValue">0</strong>
-          </div>
-          <div class="actions">
-            <button id="upgradeWarehouseBtn"></button>
-          </div>
-        </article>
+    <section class="hud-bottom card">
+      <div class="tool-row mode-row">
+        <button id="toolBuyModeBtn">Comprar</button>
+        <button id="toolCableModeBtn">Cables</button>
+        <button id="toolInspectModeBtn">Selec</button>
+      </div>
+      <div class="tool-row action-row">
+        <button id="toolUpgradeBtn">Upgrade</button>
+        <button id="toolSellBtn">Vendre</button>
+        <button id="toolDeleteBtn">Borrar</button>
+        <button id="techUnlockIronBtn">Tech</button>
+      </div>
+      <div class="buy-picker">
+        <button id="buyMinerTypeBtn">Miner</button>
+        <button id="buyWoodMinerTypeBtn">Fusta</button>
+        <button id="buyIronMinerTypeBtn">Fe</button>
+        <button id="buyPoleTypeBtn">Conn</button>
+        <span>M: <strong id="minerCostValue">0$</strong></span>
+        <span>Fu: <strong id="woodMinerCostValue">0$</strong></span>
+        <span>Fe: <strong id="ironMinerCostValue">-</strong></span>
+        <span>Cn: <strong id="poleCostValue">0$</strong></span>
+      </div>
+      <div class="quick-info">
+        <span>Cb <strong id="cableCostValue">0$</strong></span>
+        <span>Rg <strong id="cableRangeValue">0</strong></span>
+        <span>Auto <strong id="autoSellValue">OFF</strong></span>
+        <span>Mant <strong id="maintenanceValue">0$/s</strong></span>
+      </div>
+      <div class="quick-info">
+        <span>Tip <strong id="selectedTypeValue">-</strong></span>
+        <span>Nv <strong id="selectedLevelValue">-</strong></span>
+        <span>Up <strong id="selectedUpgradeCostValue">-</strong></span>
+      </div>
+      <div class="actions compact">
+        <button id="toggleAutoSellBtn">Auto Tot OFF</button>
+        <button id="sell10Btn">+10u</button>
+        <button id="sellAllBtn">Tot</button>
+        <button id="clearSelectionBtn">Neteja</button>
+      </div>
+      <details class="contract-box">
+        <summary>Contracte</summary>
+        <div id="contractOffer" class="contract-block"></div>
+        <div class="actions compact">
+          <button id="acceptContractBtn">Acceptar</button>
+          <button id="deliverContractBtn">Entregar</button>
+          <button id="rerollContractBtn">Nou</button>
+        </div>
+      </details>
+    </section>
+  </main>
 
-        <article class="card">
-          <h2>Connexions</h2>
-          <p class="muted">Sistema simple de connexio entre zones.</p>
-          <label class="switch-row">
-            <input id="minerToWarehouseToggle" type="checkbox" />
-            <span>Miner -> Magatzem</span>
-          </label>
-          <label class="switch-row">
-            <input id="warehouseToMarketToggle" type="checkbox" />
-            <span>Magatzem -> Mercat (auto-venda)</span>
-          </label>
-          <div class="badge-row">
-            <span id="flowStatus" class="badge">Flux aturat</span>
-          </div>
-        </article>
+  <div id="toast" class="toast hidden"></div>
+  <script src="script.js"></script>
+</body>
 
-        <article class="card">
-          <h2>Mercat</h2>
-          <p class="muted">Ven pedra per guanyar diners.</p>
-          <div class="info-row">
-            <span>Preu pedra</span>
-            <strong id="stonePriceValue">0</strong>
-          </div>
-          <div class="actions">
-            <button id="sell10Btn">Vendre 10</button>
-            <button id="sellAllBtn">Vendre tot</button>
-          </div>
-        </article>
-
-        <article class="card full">
-          <h2>Contractes (v1)</h2>
-          <p class="muted">Entrega pedra dins del temps per una recompensa millor.</p>
-          <div id="contractOffer" class="contract-block"></div>
-          <div class="actions">
-            <button id="acceptContractBtn">Acceptar contracte</button>
-            <button id="deliverContractBtn">Entregar pedra</button>
-            <button id="rerollContractBtn">Nou contracte</button>
-          </div>
-        </article>
-      </section>
-    </main>
-
-    <script src="script.js"></script>
-  </body>
 </html>
