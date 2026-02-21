@@ -131,12 +131,13 @@ function renderContract() {
     (contract.requirements || [])
       .map((req) => {
         const label = labelByKey[req.key] || req.key;
+        const stock = Math.max(0, Math.floor(state.resources[req.key] || 0));
         const done = showDelivered
           ? Math.max(0, Math.floor((contract.delivered && contract.delivered[req.key]) || 0))
           : 0;
         const value = showDelivered
-          ? `${formatInt(done)} / ${formatInt(req.required)}`
-          : `${formatInt(req.required)}`;
+          ? `${formatInt(done)} / ${formatInt(req.required)} | Stock ${formatInt(stock)}`
+          : `${formatInt(req.required)} | Stock ${formatInt(stock)}`;
         return `<div class="contract-line"><span>${label}</span><strong>${value}</strong></div>`;
       })
       .join("");
