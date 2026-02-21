@@ -374,6 +374,7 @@ function createDefaultState() {
     economy: {
       lastMaintenancePerSec: 0,
       recipeActivity: {},
+      recipeActivityDirect: {},
     },
     market: {
       multipliers: {},

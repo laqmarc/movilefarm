@@ -556,6 +556,26 @@ function getNetworkSnapshot() {
     gold: marketGoldRate,
     lithium: marketLithiumRate,
   };
+  const marketOnlyProcessorRates = {};
+  for (const node of state.nodes) {
+    if (!connectedToMarketOnly(node)) continue;
+    const processor = PROCESSOR_NODE_TYPES[node.type];
+    if (!processor) continue;
+    const recipeId = nodeRecipeId(node);
+    if (!recipeId) continue;
+    const rate = processor.ratePerSec(node.level);
+    marketOnlyProcessorRates[recipeId] = (marketOnlyProcessorRates[recipeId] || 0) + rate;
+  }
+
+  for (const [recipeId, ratePerSec] of Object.entries(marketOnlyProcessorRates)) {
+    if (!Number.isFinite(ratePerSec) || ratePerSec <= 0) continue;
+    const recipe = RECIPES[recipeId];
+    if (!recipe || !recipe.outputs) continue;
+    for (const [resourceKey, amountPerScale] of Object.entries(recipe.outputs)) {
+      directMarketRates[resourceKey] = (directMarketRates[resourceKey] || 0) + amountPerScale * ratePerSec;
+    }
+  }
+
   const directMarketRate = Object.values(directMarketRates).reduce((sum, rate) => sum + rate, 0);
   const processorRates = {};
   for (const node of state.nodes) {

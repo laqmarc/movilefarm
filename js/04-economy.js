@@ -433,20 +433,136 @@ function processConnectedRecipes(snapshot, dtSec, freeCapacity) {
   return free;
 }
 
+function maxRecipeScaleByInputsFromInventory(recipe, wantedScale, inventory) {
+  let maxScale = Math.max(0, wantedScale);
+  for (const [resourceKey, amountPerScale] of Object.entries(recipe.inputs || {})) {
+    if (amountPerScale <= 0) continue;
+    const available = Math.max(0, inventory[resourceKey] || 0);
+    maxScale = Math.min(maxScale, available / amountPerScale);
+  }
+  return Math.max(0, maxScale);
+}
+
+function processRecipeScaleFromInventory(recipe, wantedScale, inventory) {
+  if (!recipe || wantedScale <= 0) {
+    return { wantedScale: Math.max(0, wantedScale), finalScale: 0 };
+  }
+
+  const finalScale = maxRecipeScaleByInputsFromInventory(recipe, wantedScale, inventory);
+  if (finalScale <= 0) {
+    return { wantedScale, finalScale: 0 };
+  }
+
+  for (const [resourceKey, amountPerScale] of Object.entries(recipe.inputs || {})) {
+    if (amountPerScale <= 0) continue;
+    const next = (inventory[resourceKey] || 0) - amountPerScale * finalScale;
+    inventory[resourceKey] = Math.max(0, next);
+  }
+
+  for (const [resourceKey, amountPerScale] of Object.entries(recipe.outputs || {})) {
+    const produced = amountPerScale * finalScale;
+    inventory[resourceKey] = (inventory[resourceKey] || 0) + produced;
+    state.progression.produced[resourceKey] = (state.progression.produced[resourceKey] || 0) + produced;
+  }
+
+  return { wantedScale, finalScale };
+}
+
+function directMarketMinerOutput(node) {
+  if (!node) return null;
+  if (node.type === "miner") return { key: "stone", ratePerSec: minerRatePerSec(node.level) };
+  if (node.type === "wood_miner") return { key: "wood", ratePerSec: woodMinerRatePerSec(node.level) };
+  if (node.type === "sand_miner") return { key: "sand", ratePerSec: sandMinerRatePerSec(node.level) };
+  if (node.type === "water_miner") return { key: "water", ratePerSec: waterMinerRatePerSec(node.level) };
+  if (node.type === "iron_miner") return { key: "iron", ratePerSec: ironMinerRatePerSec(node.level) };
+  if (node.type === "coal_miner") return { key: "coal", ratePerSec: coalMinerRatePerSec(node.level) };
+  if (node.type === "copper_miner") return { key: "copper", ratePerSec: copperMinerRatePerSec(node.level) };
+  if (node.type === "oil_miner") return { key: "oil", ratePerSec: oilMinerRatePerSec(node.level) };
+  if (node.type === "aluminum_miner") return { key: "aluminum", ratePerSec: aluminumMinerRatePerSec(node.level) };
+  if (node.type === "quartz_miner") return { key: "quartz", ratePerSec: quartzMinerRatePerSec(node.level) };
+  if (node.type === "sulfur_miner") return { key: "sulfur", ratePerSec: sulfurMinerRatePerSec(node.level) };
+  if (node.type === "gold_miner") return { key: "gold", ratePerSec: goldMinerRatePerSec(node.level) };
+  if (node.type === "lithium_miner") return { key: "lithium", ratePerSec: lithiumMinerRatePerSec(node.level) };
+  return null;
+}
+
+function recipePriority(recipeId) {
+  if (typeof recipeId !== "string") return 3;
+  if (recipeId.startsWith("forge_")) return 1;
+  if (recipeId.startsWith("assembler_")) return 2;
+  return 3;
+}
+
 function sellDirectMarketResources(snapshot, dtSec) {
-  if (!snapshot || !snapshot.marketNode) return { sold: 0, earned: 0 };
-  const rates = snapshot.directMarketRates || {};
+  if (!snapshot || !snapshot.marketNode) {
+    state.economy.recipeActivityDirect = {};
+    return { sold: 0, earned: 0 };
+  }
+
+  const marketOnlyNodes = state.nodes.filter((node) =>
+    snapshot.reachableFromMarket.has(node.id) && !snapshot.reachableFromWarehouse.has(node.id)
+  );
+
+  if (marketOnlyNodes.length < 1) {
+    state.economy.recipeActivityDirect = {};
+    return { sold: 0, earned: 0 };
+  }
+
+  const inventory = {};
+  const processorRates = {};
+  const now = Date.now();
+  const previousActivity = state.economy.recipeActivityDirect || {};
+  const nextActivity = {};
+
+  for (const node of marketOnlyNodes) {
+    const minerOut = directMarketMinerOutput(node);
+    if (minerOut) {
+      const qty = Math.max(0, minerOut.ratePerSec * dtSec);
+      if (qty > 0) {
+        inventory[minerOut.key] = (inventory[minerOut.key] || 0) + qty;
+        state.progression.produced[minerOut.key] = (state.progression.produced[minerOut.key] || 0) + qty;
+      }
+      continue;
+    }
+
+    const processor = PROCESSOR_NODE_TYPES[node.type];
+    if (!processor) continue;
+    const recipeId = nodeRecipeId(node);
+    if (!recipeId) continue;
+    processorRates[recipeId] = (processorRates[recipeId] || 0) + processor.ratePerSec(node.level);
+  }
+
+  const orderedRecipes = Object.entries(processorRates).sort(
+    (a, b) => recipePriority(a[0]) - recipePriority(b[0])
+  );
+  for (const [recipeId, ratePerSec] of orderedRecipes) {
+    if (!Number.isFinite(ratePerSec) || ratePerSec <= 0) continue;
+    const recipe = RECIPES[recipeId];
+    if (!recipe) continue;
+    const wantedScale = ratePerSec * dtSec;
+    const result = processRecipeScaleFromInventory(recipe, wantedScale, inventory);
+    const utilization = result.wantedScale > 0
+      ? Math.max(0, Math.min(1, result.finalScale / result.wantedScale))
+      : 0;
+    const prev = previousActivity[recipeId];
+    const previousLastRun = prev && Number.isFinite(prev.lastRunAt) ? prev.lastRunAt : 0;
+    nextActivity[recipeId] = {
+      utilization,
+      lastRunAt: result.finalScale > 0 ? now : previousLastRun,
+    };
+  }
+
+  state.economy.recipeActivityDirect = nextActivity;
   let sold = 0;
   let earned = 0;
 
-  for (const [resourceKey, ratePerSec] of Object.entries(rates)) {
-    if (!Number.isFinite(ratePerSec) || ratePerSec <= 0) continue;
-    const qty = ratePerSec * dtSec;
+  for (const [resourceKey, qtyRaw] of Object.entries(inventory)) {
+    const qty = Math.max(0, qtyRaw);
     if (qty <= 0) continue;
     const price = currentResourcePrice(resourceKey);
+    if (!Number.isFinite(price) || price <= 0) continue;
     sold += qty;
     earned += qty * price;
-    state.progression.produced[resourceKey] = (state.progression.produced[resourceKey] || 0) + qty;
   }
 
   if (earned > 0) {
