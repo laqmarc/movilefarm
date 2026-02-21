@@ -28,13 +28,22 @@ function clampCamera() {
   const viewportH = dom.mapBoard.clientHeight;
   const scaledWorldW = worldWidthPx() * state.camera.zoom;
   const scaledWorldH = worldHeightPx() * state.camera.zoom;
-  const minX = Math.min(0, viewportW - scaledWorldW);
-  const minY = Math.min(0, viewportH - scaledWorldH);
-  const maxX = 0;
-  const maxY = 0;
 
-  state.camera.x = Math.min(maxX, Math.max(minX, state.camera.x));
-  state.camera.y = Math.min(maxY, Math.max(minY, state.camera.y));
+  if (scaledWorldW <= viewportW) {
+    state.camera.x = (viewportW - scaledWorldW) / 2;
+  } else {
+    const minX = viewportW - scaledWorldW;
+    const maxX = 0;
+    state.camera.x = Math.min(maxX, Math.max(minX, state.camera.x));
+  }
+
+  if (scaledWorldH <= viewportH) {
+    state.camera.y = (viewportH - scaledWorldH) / 2;
+  } else {
+    const minY = viewportH - scaledWorldH;
+    const maxY = 0;
+    state.camera.y = Math.min(maxY, Math.max(minY, state.camera.y));
+  }
 }
 
 function applyCameraTransform() {

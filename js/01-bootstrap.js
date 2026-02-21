@@ -5,7 +5,7 @@ const CONFIG = {
   gridCols: 18,
   cellSizePx: 62,
   panDragThresholdPx: 10,
-  minZoom: 0.7,
+  minZoom: 0.4,
   maxZoom: 2.2,
   autosaveMs: 4000,
   stonePrice: 1,
