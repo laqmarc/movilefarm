@@ -217,6 +217,26 @@ function bindEvents() {
     render();
   });
 
+  dom.buyQuartzMinerTypeBtn.addEventListener("click", () => {
+    setBuildType("quartz_miner");
+    render();
+  });
+
+  dom.buySulfurMinerTypeBtn.addEventListener("click", () => {
+    setBuildType("sulfur_miner");
+    render();
+  });
+
+  dom.buyGoldMinerTypeBtn.addEventListener("click", () => {
+    setBuildType("gold_miner");
+    render();
+  });
+
+  dom.buyLithiumMinerTypeBtn.addEventListener("click", () => {
+    setBuildType("lithium_miner");
+    render();
+  });
+
   dom.buyForgeTypeBtn.addEventListener("click", () => {
     setBuildType("forge");
     render();
@@ -257,9 +277,11 @@ function bindEvents() {
     cycleSelectedRecipe();
   });
 
-  dom.toolRecipeListBtn.addEventListener("click", () => {
-    toggleRecipePanel();
-  });
+  if (dom.toolRecipeListBtn) {
+    dom.toolRecipeListBtn.addEventListener("click", () => {
+      toggleRecipePanel();
+    });
+  }
 
   dom.toolDeleteBtn.addEventListener("click", () => {
     removeSelectedNode();
@@ -277,6 +299,10 @@ function bindEvents() {
     const action = event.target?.dataset?.action;
     if (action === "open-resource-panel") {
       toggleResourcePanel();
+      return;
+    }
+    if (action === "open-recipe-panel") {
+      toggleRecipePanel();
     }
   });
 

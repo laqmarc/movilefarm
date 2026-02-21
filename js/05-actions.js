@@ -49,6 +49,16 @@ function setBuildType(type) {
     return;
   }
 
+  if ((type === "quartz_miner" || type === "sulfur_miner") && !state.tech.materialsUnlocked) {
+    showToast("Desbloqueja tecnologia Materials");
+    return;
+  }
+
+  if ((type === "gold_miner" || type === "lithium_miner") && !state.tech.endgameUnlocked) {
+    showToast("Desbloqueja tecnologia Endgame");
+    return;
+  }
+
   if (type === "forge" && !state.tech.forgeUnlocked) {
     showToast("Desbloqueja farga a Tech");
     return;
@@ -70,6 +80,10 @@ function setBuildType(type) {
     state.ui.mode === "build_copper_miner" ||
     state.ui.mode === "build_oil_miner" ||
     state.ui.mode === "build_aluminum_miner" ||
+    state.ui.mode === "build_quartz_miner" ||
+    state.ui.mode === "build_sulfur_miner" ||
+    state.ui.mode === "build_gold_miner" ||
+    state.ui.mode === "build_lithium_miner" ||
     state.ui.mode === "build_forge" ||
     state.ui.mode === "build_assembler" ||
     state.ui.mode === "build_pole"
@@ -78,6 +92,10 @@ function setBuildType(type) {
     else if (type === "assembler") setMode("build_assembler");
     else if (type === "forge") setMode("build_forge");
     else if (type === "aluminum_miner") setMode("build_aluminum_miner");
+    else if (type === "quartz_miner") setMode("build_quartz_miner");
+    else if (type === "sulfur_miner") setMode("build_sulfur_miner");
+    else if (type === "gold_miner") setMode("build_gold_miner");
+    else if (type === "lithium_miner") setMode("build_lithium_miner");
     else if (type === "oil_miner") setMode("build_oil_miner");
     else if (type === "copper_miner") setMode("build_copper_miner");
     else if (type === "coal_miner") setMode("build_coal_miner");
@@ -132,6 +150,26 @@ function enterBuyMode() {
 
   if (state.ui.buyType === "aluminum_miner" && state.tech.advancedMinesUnlocked) {
     setMode("build_aluminum_miner");
+    return;
+  }
+
+  if (state.ui.buyType === "quartz_miner" && state.tech.materialsUnlocked) {
+    setMode("build_quartz_miner");
+    return;
+  }
+
+  if (state.ui.buyType === "sulfur_miner" && state.tech.materialsUnlocked) {
+    setMode("build_sulfur_miner");
+    return;
+  }
+
+  if (state.ui.buyType === "gold_miner" && state.tech.endgameUnlocked) {
+    setMode("build_gold_miner");
+    return;
+  }
+
+  if (state.ui.buyType === "lithium_miner" && state.tech.endgameUnlocked) {
+    setMode("build_lithium_miner");
     return;
   }
 
@@ -323,6 +361,90 @@ function placeNode(type, row, col) {
     return;
   }
 
+  if (type === "quartz_miner") {
+    if (!state.tech.materialsUnlocked) {
+      showToast("Materials no desbloquejats");
+      return;
+    }
+
+    const cost = quartzMinerPlacementCost();
+    if (!spendMoney(cost)) {
+      showToast("No tens prou diners");
+      return;
+    }
+
+    const id = `quartz-miner-${state.nextQuartzMinerId}`;
+    state.nextQuartzMinerId += 1;
+    state.nodes.push({ id, type: "quartz_miner", row, col, level: 1, fixed: false });
+    state.progression.nodesBuilt += 1;
+    state.ui.selectedNodeId = id;
+    showToast("Miner quars colocat");
+    return;
+  }
+
+  if (type === "sulfur_miner") {
+    if (!state.tech.materialsUnlocked) {
+      showToast("Materials no desbloquejats");
+      return;
+    }
+
+    const cost = sulfurMinerPlacementCost();
+    if (!spendMoney(cost)) {
+      showToast("No tens prou diners");
+      return;
+    }
+
+    const id = `sulfur-miner-${state.nextSulfurMinerId}`;
+    state.nextSulfurMinerId += 1;
+    state.nodes.push({ id, type: "sulfur_miner", row, col, level: 1, fixed: false });
+    state.progression.nodesBuilt += 1;
+    state.ui.selectedNodeId = id;
+    showToast("Miner sofre colocat");
+    return;
+  }
+
+  if (type === "gold_miner") {
+    if (!state.tech.endgameUnlocked) {
+      showToast("Endgame no desbloquejat");
+      return;
+    }
+
+    const cost = goldMinerPlacementCost();
+    if (!spendMoney(cost)) {
+      showToast("No tens prou diners");
+      return;
+    }
+
+    const id = `gold-miner-${state.nextGoldMinerId}`;
+    state.nextGoldMinerId += 1;
+    state.nodes.push({ id, type: "gold_miner", row, col, level: 1, fixed: false });
+    state.progression.nodesBuilt += 1;
+    state.ui.selectedNodeId = id;
+    showToast("Miner or colocat");
+    return;
+  }
+
+  if (type === "lithium_miner") {
+    if (!state.tech.endgameUnlocked) {
+      showToast("Endgame no desbloquejat");
+      return;
+    }
+
+    const cost = lithiumMinerPlacementCost();
+    if (!spendMoney(cost)) {
+      showToast("No tens prou diners");
+      return;
+    }
+
+    const id = `lithium-miner-${state.nextLithiumMinerId}`;
+    state.nextLithiumMinerId += 1;
+    state.nodes.push({ id, type: "lithium_miner", row, col, level: 1, fixed: false });
+    state.progression.nodesBuilt += 1;
+    state.ui.selectedNodeId = id;
+    showToast("Miner liti colocat");
+    return;
+  }
+
   if (type === "forge") {
     if (!state.tech.forgeUnlocked) {
       showToast("Farga no desbloquejada");
@@ -511,6 +633,30 @@ function onGridTap(row, col) {
 
   if (state.ui.mode === "build_aluminum_miner") {
     placeNode("aluminum_miner", row, col);
+    render();
+    return;
+  }
+
+  if (state.ui.mode === "build_quartz_miner") {
+    placeNode("quartz_miner", row, col);
+    render();
+    return;
+  }
+
+  if (state.ui.mode === "build_sulfur_miner") {
+    placeNode("sulfur_miner", row, col);
+    render();
+    return;
+  }
+
+  if (state.ui.mode === "build_gold_miner") {
+    placeNode("gold_miner", row, col);
+    render();
+    return;
+  }
+
+  if (state.ui.mode === "build_lithium_miner") {
+    placeNode("lithium_miner", row, col);
     render();
     return;
   }
@@ -801,48 +947,75 @@ function prestigeReset() {
 }
 
 function tutorialStepData(step) {
-  if (step === 0) return {
-    title: "Tutorial 1/6",
-    body: "Arrossega el mapa amb el dit i fes pinch per zoom.",
-    manual: true,
-    done: false,
-  };
-  if (step === 1) return {
-    title: "Tutorial 2/6",
-    body: "Col.loca una maquina de Pedra des de Comprar.",
-    manual: false,
-    done: () => minerNodes().length >= 2,
-  };
-  if (step === 2) return {
-    title: "Tutorial 3/6",
-    body: "Connecta nodes amb Cables (o Tallar per eliminar).",
-    manual: false,
-    done: () => state.cables.length >= 2,
-  };
-  if (step === 3) return {
-    title: "Tutorial 4/6",
-    body: "Ven recursos al mercat (botons Tot/+10u).",
-    manual: false,
-    done: () => (state.progression.totalSoldUnits || 0) >= 20,
-  };
-  if (step === 4) return {
-    title: "Tutorial 5/6",
-    body: "Desbloqueja Fe amb el botó Tech.",
-    manual: false,
-    done: () => state.tech.ironUnlocked,
-  };
-  if (step === 5) return {
-    title: "Tutorial 6/6",
-    body: "Obre Recerca i desbloqueja la primera millora.",
-    manual: false,
-    done: () => unlockedResearchCount() >= 1,
-  };
-  return null;
+  const steps = [
+    {
+      title: "Tutorial 1/10",
+      body: "Navega el mapa amb 1 dit i fes zoom amb 2 dits (pinch). Quan ho tinguis clar, prem Seguent.",
+      manual: true,
+      done: false,
+    },
+    {
+      title: "Tutorial 2/10",
+      body: "En mode compra ($), col.loca una altra maquina de Pedra a la graella.",
+      manual: false,
+      done: () => minerNodes().length >= 2,
+    },
+    {
+      title: "Tutorial 3/10",
+      body: "Connecta maquines i magatzem amb Cables. Si t'equivoques, usa Tallar.",
+      manual: false,
+      done: () => state.cables.length >= 2,
+    },
+    {
+      title: "Tutorial 4/10",
+      body: "Ven produccio al mercat amb Tot o +10u fins arribar a 20 unitats venudes.",
+      manual: false,
+      done: () => (state.progression.totalSoldUnits || 0) >= 20,
+    },
+    {
+      title: "Tutorial 5/10",
+      body: "Compra la teva primera maquina de Fusta per ampliar la cadena de recursos.",
+      manual: false,
+      done: () => woodMinerNodes().length >= 1,
+    },
+    {
+      title: "Tutorial 6/10",
+      body: "Obre Recursos o Receptes des de la barra superior per consultar l'estat de la fabrica.",
+      manual: false,
+      done: () => state.ui.resourcePanelOpen || state.ui.recipePanelOpen,
+    },
+    {
+      title: "Tutorial 7/10",
+      body: "Desbloqueja Ferro amb el botó Tech per obrir noves maquines i receptes.",
+      manual: false,
+      done: () => state.tech.ironUnlocked,
+    },
+    {
+      title: "Tutorial 8/10",
+      body: "Col.loca com a minim una maquina de Ferro.",
+      manual: false,
+      done: () => ironMinerNodes().length >= 1,
+    },
+    {
+      title: "Tutorial 9/10",
+      body: "Obre Recerca i desbloqueja una millora per accelerar la progressio.",
+      manual: false,
+      done: () => unlockedResearchCount() >= 1,
+    },
+    {
+      title: "Tutorial 10/10",
+      body: "Accepta un contracte des del panell de Contracte. A partir d'aqui ja pots escalar la teva xarxa.",
+      manual: false,
+      done: () => !!state.contract.active || (state.progression.contractsCompleted || 0) >= 1,
+    },
+  ];
+
+  return steps[step] || null;
 }
 
 function updateTutorialProgress() {
   if (state.tutorial.completed) return;
-  let safety = 12;
+  let safety = 24;
   while (safety > 0) {
     safety -= 1;
     const step = tutorialStepData(state.tutorial.step);
@@ -890,13 +1063,18 @@ function tutorialDismiss() {
 }
 
 function tutorialOpen() {
+  if (state.tutorial.completed) {
+    state.tutorial.completed = false;
+    state.tutorial.step = 0;
+  }
   state.tutorial.dismissed = false;
   render();
 }
 
 function canCycleRecipe(node) {
   const cfg = processorConfig(node);
-  return !!(cfg && cfg.recipeIds.length > 1);
+  if (!cfg) return false;
+  return availableRecipeIdsForNodeType(node.type).length > 1;
 }
 
 function recipeResourceLabel(resourceKey) {
@@ -909,12 +1087,18 @@ function recipeResourceLabel(resourceKey) {
   if (resourceKey === "copper") return "Coure";
   if (resourceKey === "oil") return "Petroli";
   if (resourceKey === "aluminum") return "Alumini";
+  if (resourceKey === "quartz") return "Quars";
+  if (resourceKey === "sulfur") return "Sofre";
+  if (resourceKey === "gold") return "Or";
+  if (resourceKey === "lithium") return "Liti";
   if (resourceKey === "parts") return "Peces";
   if (resourceKey === "steel") return "Acer";
   if (resourceKey === "plates") return "Plaques";
   if (resourceKey === "silicon") return "Silici";
   if (resourceKey === "plastic") return "Plastic";
   if (resourceKey === "steam") return "Vapor";
+  if (resourceKey === "glass") return "Vidre";
+  if (resourceKey === "acid") return "Acid";
   if (resourceKey === "modules") return "Moduls";
   if (resourceKey === "circuits") return "Circuits";
   if (resourceKey === "frames") return "Bastidors";
@@ -922,6 +1106,10 @@ function recipeResourceLabel(resourceKey) {
   if (resourceKey === "wiring") return "Cablejat";
   if (resourceKey === "microchips") return "Microxips";
   if (resourceKey === "batteries") return "Bateries";
+  if (resourceKey === "fiber") return "Fibra";
+  if (resourceKey === "composites") return "Compostos";
+  if (resourceKey === "superalloy") return "Superaliatge";
+  if (resourceKey === "quantumchips") return "Quantum Xips";
   return resourceKey;
 }
 
@@ -949,7 +1137,7 @@ function unlockedRecipeGroups() {
   const groups = [];
   for (const [nodeType, cfg] of Object.entries(PROCESSOR_NODE_TYPES || {})) {
     if (!recipeBuildingUnlocked(nodeType)) continue;
-    const recipeIds = Array.isArray(cfg.recipeIds) ? cfg.recipeIds : [];
+    const recipeIds = availableRecipeIdsForNodeType(nodeType);
     if (recipeIds.length < 1) continue;
 
     const recipes = recipeIds
@@ -1000,15 +1188,16 @@ function cycleSelectedRecipe() {
     return;
   }
 
-  if (cfg.recipeIds.length <= 1) {
+  const recipeIds = availableRecipeIdsForNodeType(node.type);
+  if (recipeIds.length <= 1) {
     showToast("Nomes hi ha una recepta");
     return;
   }
 
   const currentId = nodeRecipeId(node);
-  const currentIndex = cfg.recipeIds.indexOf(currentId);
-  const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % cfg.recipeIds.length : 0;
-  const nextId = cfg.recipeIds[nextIndex];
+  const currentIndex = recipeIds.indexOf(currentId);
+  const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % recipeIds.length : 0;
+  const nextId = recipeIds[nextIndex];
   node.recipeId = nextId;
   const label = RECIPES[nextId]?.label || nextId;
   showToast(`Recepta: ${label}`);
@@ -1146,6 +1335,24 @@ function nextTechnologyToUnlock() {
     };
   }
 
+  if (!state.tech.materialsUnlocked) {
+    return {
+      key: "materialsUnlocked",
+      label: "Materials",
+      cost: CONFIG.materialsUnlockCost,
+      toast: "Familia Materials desbloquejada",
+    };
+  }
+
+  if (!state.tech.endgameUnlocked) {
+    return {
+      key: "endgameUnlocked",
+      label: "Endgame",
+      cost: CONFIG.endgameUnlockCost,
+      toast: "Familia Endgame desbloquejada",
+    };
+  }
+
   return null;
 }
 
@@ -1168,6 +1375,10 @@ function unlockNextTechnology() {
     state.ui.buyType === "copper_miner" ||
     state.ui.buyType === "oil_miner" ||
     state.ui.buyType === "aluminum_miner" ||
+    state.ui.buyType === "quartz_miner" ||
+    state.ui.buyType === "sulfur_miner" ||
+    state.ui.buyType === "gold_miner" ||
+    state.ui.buyType === "lithium_miner" ||
     state.ui.buyType === "forge" ||
     state.ui.buyType === "assembler"
   ) {

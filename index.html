@@ -46,15 +46,33 @@
 
     <section class="hud-bottom card">
       <div class="tool-row mode-row">
-        <button id="toolBuyModeBtn">Comprar</button>
-        <button id="toolCableModeBtn">Cables</button>
-        <button id="toolCableDeleteModeBtn">Tallar</button>
+        <button id="toolBuyModeBtn">$</button>
+        <button id="toolCableModeBtn" class="icon-text-btn" aria-label="Cables">
+          <svg class="tool-icon" viewBox="0 0 24 24" role="img" aria-hidden="true">
+            <line x1="6" y1="7" x2="18" y2="17"></line>
+            <line x1="6" y1="17" x2="18" y2="7"></line>
+            <circle cx="6" cy="7" r="2.2"></circle>
+            <circle cx="18" cy="17" r="2.2"></circle>
+            <circle cx="6" cy="17" r="2.2"></circle>
+            <circle cx="18" cy="7" r="2.2"></circle>
+          </svg>
+          <span>Cab</span>
+        </button>
+        <button id="toolCableDeleteModeBtn" class="icon-text-btn" aria-label="Tallar cable">
+          <svg class="tool-icon" viewBox="0 0 24 24" role="img" aria-hidden="true">
+            <circle cx="6.5" cy="7" r="2.4"></circle>
+            <circle cx="6.5" cy="17" r="2.4"></circle>
+            <line x1="8.8" y1="8.6" x2="18.8" y2="3.8"></line>
+            <line x1="8.8" y1="15.4" x2="18.8" y2="20.2"></line>
+            <line x1="10.2" y1="12" x2="20.2" y2="12"></line>
+          </svg>
+          <span>Tall</span>
+        </button>
         <button id="toolInspectModeBtn">Selec</button>
       </div>
       <div class="tool-row action-row">
         <button id="toolUpgradeBtn">Upgrade</button>
         <button id="toolRecipeBtn">Recepta</button>
-        <button id="toolRecipeListBtn">Receptes</button>
         <button id="toolSellBtn">Vendre</button>
         <button id="toolDeleteBtn">Borrar</button>
         <button id="techUnlockIronBtn">Tech</button>
@@ -70,6 +88,10 @@
         <button id="buyCopperMinerTypeBtn">Cu</button>
         <button id="buyOilMinerTypeBtn">Pet</button>
         <button id="buyAluminumMinerTypeBtn">Al</button>
+        <button id="buyQuartzMinerTypeBtn">Qz</button>
+        <button id="buySulfurMinerTypeBtn">Sf</button>
+        <button id="buyGoldMinerTypeBtn">Au</button>
+        <button id="buyLithiumMinerTypeBtn">Li</button>
         <span>P: <strong id="minerCostValue">0$</strong></span>
         <span>Fu: <strong id="woodMinerCostValue">0$</strong></span>
         <span>So: <strong id="sandMinerCostValue">0$</strong></span>
@@ -79,6 +101,10 @@
         <span>Cu: <strong id="copperMinerCostValue">-</strong></span>
         <span>Pt: <strong id="oilMinerCostValue">-</strong></span>
         <span>Al: <strong id="aluminumMinerCostValue">-</strong></span>
+        <span>Qz: <strong id="quartzMinerCostValue">-</strong></span>
+        <span>Sf: <strong id="sulfurMinerCostValue">-</strong></span>
+        <span>Au: <strong id="goldMinerCostValue">-</strong></span>
+        <span>Li: <strong id="lithiumMinerCostValue">-</strong></span>
       </div>
       <div class="buy-picker">
         <span class="buy-title">Maquines</span>

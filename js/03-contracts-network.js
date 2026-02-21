@@ -4,6 +4,8 @@
     forgeUnlocked: false,
     advancedMinesUnlocked: false,
     assemblerUnlocked: false,
+    materialsUnlocked: false,
+    endgameUnlocked: false,
   };
 }
 
@@ -19,6 +21,10 @@ function contractResourcePool(techState = defaultTechState()) {
     { key: "copper", label: "Coure", price: CONFIG.copperPrice, unlocked: tech.advancedMinesUnlocked },
     { key: "oil", label: "Petroli", price: CONFIG.oilPrice, unlocked: tech.advancedMinesUnlocked },
     { key: "aluminum", label: "Alumini", price: CONFIG.aluminumPrice, unlocked: tech.advancedMinesUnlocked },
+    { key: "quartz", label: "Quars", price: CONFIG.quartzPrice, unlocked: tech.materialsUnlocked },
+    { key: "sulfur", label: "Sofre", price: CONFIG.sulfurPrice, unlocked: tech.materialsUnlocked },
+    { key: "gold", label: "Or", price: CONFIG.goldPrice, unlocked: tech.endgameUnlocked },
+    { key: "lithium", label: "Liti", price: CONFIG.lithiumPrice, unlocked: tech.endgameUnlocked },
     { key: "parts", label: "Peces", price: CONFIG.partsPrice, unlocked: tech.forgeUnlocked },
     {
       key: "steel",
@@ -35,6 +41,9 @@ function contractResourcePool(techState = defaultTechState()) {
     { key: "silicon", label: "Silici", price: CONFIG.siliconPrice, unlocked: tech.forgeUnlocked && tech.advancedMinesUnlocked },
     { key: "plastic", label: "Plastic", price: CONFIG.plasticPrice, unlocked: tech.forgeUnlocked && tech.advancedMinesUnlocked },
     { key: "steam", label: "Vapor", price: CONFIG.steamPrice, unlocked: tech.forgeUnlocked && tech.advancedMinesUnlocked },
+    { key: "glass", label: "Vidre", price: CONFIG.glassPrice, unlocked: tech.forgeUnlocked && tech.materialsUnlocked },
+    { key: "acid", label: "Acid", price: CONFIG.acidPrice, unlocked: tech.forgeUnlocked && tech.materialsUnlocked },
+    { key: "superalloy", label: "Superaliatge", price: CONFIG.superalloyPrice, unlocked: tech.forgeUnlocked && tech.endgameUnlocked },
     { key: "modules", label: "Moduls", price: CONFIG.modulesPrice, unlocked: tech.assemblerUnlocked },
     { key: "circuits", label: "Circuits", price: CONFIG.circuitsPrice, unlocked: tech.assemblerUnlocked },
     { key: "frames", label: "Bastidors", price: CONFIG.framesPrice, unlocked: tech.assemblerUnlocked },
@@ -42,6 +51,9 @@ function contractResourcePool(techState = defaultTechState()) {
     { key: "wiring", label: "Cablejat", price: CONFIG.wiringPrice, unlocked: tech.assemblerUnlocked && tech.advancedMinesUnlocked },
     { key: "microchips", label: "Microxips", price: CONFIG.microchipsPrice, unlocked: tech.assemblerUnlocked && tech.advancedMinesUnlocked },
     { key: "batteries", label: "Bateries", price: CONFIG.batteriesPrice, unlocked: tech.assemblerUnlocked && tech.advancedMinesUnlocked },
+    { key: "fiber", label: "Fibra", price: CONFIG.fiberPrice, unlocked: tech.assemblerUnlocked && tech.materialsUnlocked },
+    { key: "composites", label: "Compostos", price: CONFIG.compositesPrice, unlocked: tech.assemblerUnlocked && tech.materialsUnlocked },
+    { key: "quantumchips", label: "Quantum Xips", price: CONFIG.quantumchipsPrice, unlocked: tech.assemblerUnlocked && tech.endgameUnlocked },
   ];
   return list.filter((item) => item.unlocked);
 }
@@ -88,6 +100,34 @@ const PREMIUM_CONTRACT_CHAINS = [
     baseDurationSec: 165,
     rewardMin: 2.55,
     rewardMax: 3.35,
+  },
+  {
+    id: "chain_glass_composites",
+    label: "Vidre + Compostos",
+    requires: (tech) => tech.forgeUnlocked && tech.materialsUnlocked && tech.assemblerUnlocked,
+    steps: ["Mines Sorra/Quars/Sofre", "Farga: Vidre + Acid", "Assembler: Fibra + Compostos"],
+    requirements: [
+      { key: "glass", min: 18, max: 32 },
+      { key: "acid", min: 14, max: 28 },
+      { key: "composites", min: 12, max: 22 },
+    ],
+    baseDurationSec: 190,
+    rewardMin: 2.85,
+    rewardMax: 3.7,
+  },
+  {
+    id: "chain_superalloy_quantum",
+    label: "Superaliatge + Quantum",
+    requires: (tech) => tech.forgeUnlocked && tech.assemblerUnlocked && tech.endgameUnlocked,
+    steps: ["Mines Or/Liti", "Farga: Superaliatge", "Assembler: Quantum Xips"],
+    requirements: [
+      { key: "superalloy", min: 10, max: 18 },
+      { key: "quantumchips", min: 8, max: 14 },
+      { key: "gold", min: 14, max: 24 },
+    ],
+    baseDurationSec: 220,
+    rewardMin: 3.2,
+    rewardMax: 4.05,
   },
 ];
 
@@ -393,6 +433,18 @@ function getNetworkSnapshot() {
   const connectedAluminumMiners = aluminumMinerNodes().filter((node) =>
     reachableFromWarehouse.has(node.id)
   );
+  const connectedQuartzMiners = quartzMinerNodes().filter((node) =>
+    reachableFromWarehouse.has(node.id)
+  );
+  const connectedSulfurMiners = sulfurMinerNodes().filter((node) =>
+    reachableFromWarehouse.has(node.id)
+  );
+  const connectedGoldMiners = goldMinerNodes().filter((node) =>
+    reachableFromWarehouse.has(node.id)
+  );
+  const connectedLithiumMiners = lithiumMinerNodes().filter((node) =>
+    reachableFromWarehouse.has(node.id)
+  );
   const stoneRate = connectedStoneMiners.reduce(
     (sum, miner) => sum + minerRatePerSec(miner.level),
     0
@@ -429,6 +481,22 @@ function getNetworkSnapshot() {
     (sum, miner) => sum + aluminumMinerRatePerSec(miner.level),
     0
   );
+  const quartzRate = connectedQuartzMiners.reduce(
+    (sum, miner) => sum + quartzMinerRatePerSec(miner.level),
+    0
+  );
+  const sulfurRate = connectedSulfurMiners.reduce(
+    (sum, miner) => sum + sulfurMinerRatePerSec(miner.level),
+    0
+  );
+  const goldRate = connectedGoldMiners.reduce(
+    (sum, miner) => sum + goldMinerRatePerSec(miner.level),
+    0
+  );
+  const lithiumRate = connectedLithiumMiners.reduce(
+    (sum, miner) => sum + lithiumMinerRatePerSec(miner.level),
+    0
+  );
   const processorRates = {};
   for (const node of state.nodes) {
     if (!reachableFromWarehouse.has(node.id)) continue;
@@ -447,7 +515,10 @@ function getNetworkSnapshot() {
     (processorRates.forge_plates || 0) +
     (processorRates.forge_silicon || 0) +
     (processorRates.forge_plastic || 0) +
-    (processorRates.forge_steam || 0);
+    (processorRates.forge_steam || 0) +
+    (processorRates.forge_glass || 0) +
+    (processorRates.forge_acid || 0) +
+    (processorRates.forge_superalloy || 0);
   const assemblerRate =
     (processorRates.assembler_modules || 0) +
     (processorRates.assembler_circuits || 0) +
@@ -455,7 +526,10 @@ function getNetworkSnapshot() {
     (processorRates.assembler_rubber || 0) +
     (processorRates.assembler_wiring || 0) +
     (processorRates.assembler_microchips || 0) +
-    (processorRates.assembler_batteries || 0);
+    (processorRates.assembler_batteries || 0) +
+    (processorRates.assembler_fiber || 0) +
+    (processorRates.assembler_composites || 0) +
+    (processorRates.assembler_quantumchips || 0);
 
   return {
     warehouseNode,
@@ -471,6 +545,10 @@ function getNetworkSnapshot() {
       copperRate +
       oilRate +
       aluminumRate +
+      quartzRate +
+      sulfurRate +
+      goldRate +
+      lithiumRate +
       processingRate,
     stoneRate,
     woodRate,
@@ -481,6 +559,10 @@ function getNetworkSnapshot() {
     copperRate,
     oilRate,
     aluminumRate,
+    quartzRate,
+    sulfurRate,
+    goldRate,
+    lithiumRate,
     forgeRate,
     assemblerRate,
     processorRates,

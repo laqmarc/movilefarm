@@ -7,20 +7,16 @@
 
 function renderResourceStrip() {
   const entries = resourceDisplayEntries();
-  const maxVisible = 1;
-  const visible = entries.slice(0, maxVisible);
-  const hiddenCount = Math.max(0, entries.length - visible.length);
-  const chips = visible.map((res) => {
-    const value = res.unlocked ? formatCompact(res.amount) : "Bloc";
-    const css = res.unlocked ? "res-chip" : "res-chip locked";
-    return `<span class="${css}"><span>${res.label}</span><strong>${value}</strong></span>`;
-  });
+  const hiddenCount = entries.length;
+  const chips = [];
 
-  if (hiddenCount > 0) {
-    chips.push(
-      `<button class="res-more" type="button" data-action="open-resource-panel">+${hiddenCount}</button>`
-    );
-  }
+  const resourcesLabel = hiddenCount > 0 ? `Recursos +${hiddenCount}` : "Recursos";
+  chips.push(
+    `<button class="res-strip-btn" type="button" data-action="open-resource-panel">${resourcesLabel}</button>`
+  );
+  chips.push(
+    `<button class="res-strip-btn" type="button" data-action="open-recipe-panel">Receptes</button>`
+  );
 
   dom.resourceStrip.innerHTML = chips.join("");
 }

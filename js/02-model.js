@@ -97,6 +97,22 @@ function aluminumMinerNodes() {
   return state.nodes.filter((node) => node.type === "aluminum_miner");
 }
 
+function quartzMinerNodes() {
+  return state.nodes.filter((node) => node.type === "quartz_miner");
+}
+
+function sulfurMinerNodes() {
+  return state.nodes.filter((node) => node.type === "sulfur_miner");
+}
+
+function goldMinerNodes() {
+  return state.nodes.filter((node) => node.type === "gold_miner");
+}
+
+function lithiumMinerNodes() {
+  return state.nodes.filter((node) => node.type === "lithium_miner");
+}
+
 function forgeNodes() {
   return state.nodes.filter((node) => node.type === "forge");
 }
@@ -299,7 +315,11 @@ function productionMultiplierFor(type) {
     type === "coal_miner" ||
     type === "copper_miner" ||
     type === "oil_miner" ||
-    type === "aluminum_miner";
+    type === "aluminum_miner" ||
+    type === "quartz_miner" ||
+    type === "sulfur_miner" ||
+    type === "gold_miner" ||
+    type === "lithium_miner";
 
   if (isMiner && hasResearch("rs_mining_drill")) {
     multiplier *= 1.15;
@@ -371,6 +391,22 @@ function aluminumMinerRatePerSec(level) {
   return 0.42 * (1 + (level - 1) * 0.28) * productionMultiplierFor("aluminum_miner");
 }
 
+function quartzMinerRatePerSec(level) {
+  return 0.34 * (1 + (level - 1) * 0.24) * productionMultiplierFor("quartz_miner");
+}
+
+function sulfurMinerRatePerSec(level) {
+  return 0.36 * (1 + (level - 1) * 0.24) * productionMultiplierFor("sulfur_miner");
+}
+
+function goldMinerRatePerSec(level) {
+  return 0.22 * (1 + (level - 1) * 0.2) * productionMultiplierFor("gold_miner");
+}
+
+function lithiumMinerRatePerSec(level) {
+  return 0.25 * (1 + (level - 1) * 0.21) * productionMultiplierFor("lithium_miner");
+}
+
 function forgeRatePerSec(level) {
   return 0.36 * (1 + (level - 1) * 0.24) * productionMultiplierFor("forge");
 }
@@ -389,6 +425,9 @@ const PROCESSOR_NODE_TYPES = {
       "forge_silicon",
       "forge_plastic",
       "forge_steam",
+      "forge_glass",
+      "forge_acid",
+      "forge_superalloy",
     ],
     ratePerSec: forgeRatePerSec,
   },
@@ -402,6 +441,9 @@ const PROCESSOR_NODE_TYPES = {
       "assembler_wiring",
       "assembler_microchips",
       "assembler_batteries",
+      "assembler_fiber",
+      "assembler_composites",
+      "assembler_quantumchips",
     ],
     ratePerSec: assemblerRatePerSec,
   },
@@ -466,6 +508,36 @@ const RECIPES = {
     },
     outputs: {
       steam: CONFIG.forgeSteamPerUnit,
+    },
+  },
+  forge_glass: {
+    label: "Vidre",
+    inputs: {
+      sand: CONFIG.forgeGlassSandPerUnit,
+      quartz: CONFIG.forgeGlassQuartzPerUnit,
+    },
+    outputs: {
+      glass: CONFIG.forgeGlassPerUnit,
+    },
+  },
+  forge_acid: {
+    label: "Acid",
+    inputs: {
+      sulfur: CONFIG.forgeAcidSulfurPerUnit,
+      water: CONFIG.forgeAcidWaterPerUnit,
+    },
+    outputs: {
+      acid: CONFIG.forgeAcidPerUnit,
+    },
+  },
+  forge_superalloy: {
+    label: "Superaliatge",
+    inputs: {
+      gold: CONFIG.forgeSuperalloyGoldPerUnit,
+      aluminum: CONFIG.forgeSuperalloyAluminumPerUnit,
+    },
+    outputs: {
+      superalloy: CONFIG.forgeSuperalloyPerUnit,
     },
   },
   assembler_modules: {
@@ -540,7 +612,58 @@ const RECIPES = {
       batteries: CONFIG.assemblerBatteriesPerUnit,
     },
   },
+  assembler_fiber: {
+    label: "Fibra",
+    inputs: {
+      glass: CONFIG.assemblerFiberGlassPerUnit,
+      plastic: CONFIG.assemblerFiberPlasticPerUnit,
+    },
+    outputs: {
+      fiber: CONFIG.assemblerFiberPerUnit,
+    },
+  },
+  assembler_composites: {
+    label: "Compostos",
+    inputs: {
+      fiber: CONFIG.assemblerCompositesFiberPerUnit,
+      aluminum: CONFIG.assemblerCompositesAluminumPerUnit,
+    },
+    outputs: {
+      composites: CONFIG.assemblerCompositesPerUnit,
+    },
+  },
+  assembler_quantumchips: {
+    label: "Quantum Xips",
+    inputs: {
+      lithium: CONFIG.assemblerQuantumchipsLithiumPerUnit,
+      microchips: CONFIG.assemblerQuantumchipsMicrochipsPerUnit,
+      gold: CONFIG.assemblerQuantumchipsGoldPerUnit,
+    },
+    outputs: {
+      quantumchips: CONFIG.assemblerQuantumchipsPerUnit,
+    },
+  },
 };
+
+function isRecipeUnlocked(recipeId) {
+  const materialsRecipes = new Set([
+    "forge_glass",
+    "forge_acid",
+    "assembler_fiber",
+    "assembler_composites",
+  ]);
+  const endgameRecipes = new Set(["forge_superalloy", "assembler_quantumchips"]);
+
+  if (materialsRecipes.has(recipeId)) return !!state.tech.materialsUnlocked;
+  if (endgameRecipes.has(recipeId)) return !!state.tech.endgameUnlocked;
+  return true;
+}
+
+function availableRecipeIdsForNodeType(nodeType) {
+  const cfg = PROCESSOR_NODE_TYPES[nodeType];
+  if (!cfg) return [];
+  return (cfg.recipeIds || []).filter((recipeId) => isRecipeUnlocked(recipeId));
+}
 
 function processorConfig(node) {
   if (!node) return null;
@@ -551,8 +674,13 @@ function nodeRecipeId(node) {
   const cfg = processorConfig(node);
   if (!cfg) return null;
 
-  if (cfg.recipeIds.includes(node.recipeId)) {
+  const availableRecipeIds = availableRecipeIdsForNodeType(node.type);
+  if (availableRecipeIds.includes(node.recipeId)) {
     return node.recipeId;
+  }
+
+  if (availableRecipeIds.length > 0) {
+    return availableRecipeIds[0];
   }
 
   return cfg.defaultRecipeId;
@@ -629,6 +757,30 @@ function aluminumMinerPlacementCost() {
   );
 }
 
+function quartzMinerPlacementCost() {
+  return Math.round(
+    CONFIG.quartzMinerBaseCost * CONFIG.quartzMinerCostScale ** quartzMinerNodes().length
+  );
+}
+
+function sulfurMinerPlacementCost() {
+  return Math.round(
+    CONFIG.sulfurMinerBaseCost * CONFIG.sulfurMinerCostScale ** sulfurMinerNodes().length
+  );
+}
+
+function goldMinerPlacementCost() {
+  return Math.round(
+    CONFIG.goldMinerBaseCost * CONFIG.goldMinerCostScale ** goldMinerNodes().length
+  );
+}
+
+function lithiumMinerPlacementCost() {
+  return Math.round(
+    CONFIG.lithiumMinerBaseCost * CONFIG.lithiumMinerCostScale ** lithiumMinerNodes().length
+  );
+}
+
 function forgePlacementCost() {
   return Math.round(CONFIG.forgeBaseCost * CONFIG.forgeCostScale ** forgeNodes().length);
 }
@@ -698,6 +850,22 @@ function nodeMaintenancePerSec(node) {
 
   if (node.type === "aluminum_miner") {
     return 0.25 * (1 + (node.level - 1) * 0.2);
+  }
+
+  if (node.type === "quartz_miner") {
+    return 0.24 * (1 + (node.level - 1) * 0.2);
+  }
+
+  if (node.type === "sulfur_miner") {
+    return 0.23 * (1 + (node.level - 1) * 0.2);
+  }
+
+  if (node.type === "gold_miner") {
+    return 0.29 * (1 + (node.level - 1) * 0.2);
+  }
+
+  if (node.type === "lithium_miner") {
+    return 0.28 * (1 + (node.level - 1) * 0.2);
   }
 
   if (node.type === "forge") {
@@ -789,6 +957,30 @@ function upgradeCost(node) {
     );
   }
 
+  if (node.type === "quartz_miner") {
+    return Math.round(
+      (CONFIG.minerUpgradeBaseCost * 1.44) * CONFIG.minerUpgradeScale ** (node.level - 1)
+    );
+  }
+
+  if (node.type === "sulfur_miner") {
+    return Math.round(
+      (CONFIG.minerUpgradeBaseCost * 1.42) * CONFIG.minerUpgradeScale ** (node.level - 1)
+    );
+  }
+
+  if (node.type === "gold_miner") {
+    return Math.round(
+      (CONFIG.minerUpgradeBaseCost * 1.8) * CONFIG.minerUpgradeScale ** (node.level - 1)
+    );
+  }
+
+  if (node.type === "lithium_miner") {
+    return Math.round(
+      (CONFIG.minerUpgradeBaseCost * 1.72) * CONFIG.minerUpgradeScale ** (node.level - 1)
+    );
+  }
+
   if (node.type === "forge") {
     return Math.round(
       (CONFIG.minerUpgradeBaseCost * 1.45) * CONFIG.minerUpgradeScale ** (node.level - 1)
@@ -842,6 +1034,10 @@ function formatNodeType(type) {
   if (type === "copper_miner") return "Miner coure";
   if (type === "oil_miner") return "Pou petroli";
   if (type === "aluminum_miner") return "Miner alumini";
+  if (type === "quartz_miner") return "Miner quars";
+  if (type === "sulfur_miner") return "Miner sofre";
+  if (type === "gold_miner") return "Miner or";
+  if (type === "lithium_miner") return "Miner liti";
   if (type === "forge") return "Farga";
   if (type === "assembler") return "Assembler";
   if (type === "warehouse") return "Magatzem";
@@ -860,6 +1056,10 @@ function tileLabel(node) {
   if (node.type === "copper_miner") return `Cu${node.level}`;
   if (node.type === "oil_miner") return `Pt${node.level}`;
   if (node.type === "aluminum_miner") return `Al${node.level}`;
+  if (node.type === "quartz_miner") return `Qz${node.level}`;
+  if (node.type === "sulfur_miner") return `Sf${node.level}`;
+  if (node.type === "gold_miner") return `Au${node.level}`;
+  if (node.type === "lithium_miner") return `Li${node.level}`;
   if (node.type === "forge") return `Fg${node.level}`;
   if (node.type === "assembler") return `As${node.level}`;
   if (node.type === "warehouse") return `W${node.level}`;
@@ -878,6 +1078,10 @@ function modeLabel(mode) {
   if (mode === "build_copper_miner") return "Comprar: Coure";
   if (mode === "build_oil_miner") return "Comprar: Petroli";
   if (mode === "build_aluminum_miner") return "Comprar: Alumini";
+  if (mode === "build_quartz_miner") return "Comprar: Quars";
+  if (mode === "build_sulfur_miner") return "Comprar: Sofre";
+  if (mode === "build_gold_miner") return "Comprar: Or";
+  if (mode === "build_lithium_miner") return "Comprar: Liti";
   if (mode === "build_forge") return "Comprar: Farga";
   if (mode === "build_assembler") return "Comprar: Asm";
   if (mode === "build_pole") return "Comprar: Conn";

@@ -8,6 +8,10 @@
   if (resourceKey === "copper") return CONFIG.copperPrice;
   if (resourceKey === "oil") return CONFIG.oilPrice;
   if (resourceKey === "aluminum") return CONFIG.aluminumPrice;
+  if (resourceKey === "quartz") return CONFIG.quartzPrice;
+  if (resourceKey === "sulfur") return CONFIG.sulfurPrice;
+  if (resourceKey === "gold") return CONFIG.goldPrice;
+  if (resourceKey === "lithium") return CONFIG.lithiumPrice;
   if (resourceKey === "parts") return CONFIG.partsPrice;
   if (resourceKey === "steel") return CONFIG.steelPrice;
   if (resourceKey === "plates") return CONFIG.platesPrice;
@@ -21,6 +25,12 @@
   if (resourceKey === "wiring") return CONFIG.wiringPrice;
   if (resourceKey === "microchips") return CONFIG.microchipsPrice;
   if (resourceKey === "batteries") return CONFIG.batteriesPrice;
+  if (resourceKey === "glass") return CONFIG.glassPrice;
+  if (resourceKey === "acid") return CONFIG.acidPrice;
+  if (resourceKey === "fiber") return CONFIG.fiberPrice;
+  if (resourceKey === "composites") return CONFIG.compositesPrice;
+  if (resourceKey === "superalloy") return CONFIG.superalloyPrice;
+  if (resourceKey === "quantumchips") return CONFIG.quantumchipsPrice;
   return 1;
 }
 
@@ -45,9 +55,9 @@ function updateMarketTick(dtSec) {
   const stockCap = warehouse ? capacity(warehouse.level) : 200;
 
   const keys = [
-    "stone", "wood", "sand", "water", "iron", "coal", "copper", "oil", "aluminum",
-    "parts", "steel", "plates", "silicon", "plastic", "steam",
-    "modules", "circuits", "frames", "rubber", "wiring", "microchips", "batteries",
+    "stone", "wood", "sand", "water", "iron", "coal", "copper", "oil", "aluminum", "quartz", "sulfur", "gold", "lithium",
+    "parts", "steel", "plates", "silicon", "plastic", "steam", "glass", "acid",
+    "modules", "circuits", "frames", "rubber", "wiring", "microchips", "batteries", "fiber", "composites", "superalloy", "quantumchips",
   ];
   for (const key of keys) {
     const current = getMarketMultiplier(key);
@@ -130,6 +140,30 @@ function resourceCatalog() {
       unlocked: state.tech.advancedMinesUnlocked,
     },
     {
+      key: "quartz",
+      label: "Quars",
+      price: currentResourcePrice("quartz"),
+      unlocked: state.tech.materialsUnlocked,
+    },
+    {
+      key: "sulfur",
+      label: "Sofre",
+      price: currentResourcePrice("sulfur"),
+      unlocked: state.tech.materialsUnlocked,
+    },
+    {
+      key: "gold",
+      label: "Or",
+      price: currentResourcePrice("gold"),
+      unlocked: state.tech.endgameUnlocked,
+    },
+    {
+      key: "lithium",
+      label: "Liti",
+      price: currentResourcePrice("lithium"),
+      unlocked: state.tech.endgameUnlocked,
+    },
+    {
       key: "parts",
       label: "Peces",
       price: currentResourcePrice("parts"),
@@ -164,6 +198,24 @@ function resourceCatalog() {
       label: "Vapor",
       price: currentResourcePrice("steam"),
       unlocked: state.tech.forgeUnlocked && state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "glass",
+      label: "Vidre",
+      price: currentResourcePrice("glass"),
+      unlocked: state.tech.forgeUnlocked && state.tech.materialsUnlocked,
+    },
+    {
+      key: "acid",
+      label: "Acid",
+      price: currentResourcePrice("acid"),
+      unlocked: state.tech.forgeUnlocked && state.tech.materialsUnlocked,
+    },
+    {
+      key: "superalloy",
+      label: "Superaliatge",
+      price: currentResourcePrice("superalloy"),
+      unlocked: state.tech.forgeUnlocked && state.tech.endgameUnlocked,
     },
     {
       key: "modules",
@@ -206,6 +258,24 @@ function resourceCatalog() {
       label: "Bateries",
       price: currentResourcePrice("batteries"),
       unlocked: state.tech.assemblerUnlocked && state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "fiber",
+      label: "Fibra",
+      price: currentResourcePrice("fiber"),
+      unlocked: state.tech.assemblerUnlocked && state.tech.materialsUnlocked,
+    },
+    {
+      key: "composites",
+      label: "Compostos",
+      price: currentResourcePrice("composites"),
+      unlocked: state.tech.assemblerUnlocked && state.tech.materialsUnlocked,
+    },
+    {
+      key: "quantumchips",
+      label: "Quantum Xips",
+      price: currentResourcePrice("quantumchips"),
+      unlocked: state.tech.assemblerUnlocked && state.tech.endgameUnlocked,
     },
   ];
 }
@@ -408,6 +478,38 @@ function gameTick(dtSec) {
   state.resources.wastedAluminum += lostAluminum;
   state.progression.produced.aluminum = (state.progression.produced.aluminum || 0) + storedAluminum;
   free = Math.max(0, free - storedAluminum);
+
+  const producedQuartz = snapshot.quartzRate * dtSec;
+  const storedQuartz = Math.min(producedQuartz, free);
+  const lostQuartz = producedQuartz - storedQuartz;
+  state.resources.quartz += storedQuartz;
+  state.resources.wastedQuartz += lostQuartz;
+  state.progression.produced.quartz = (state.progression.produced.quartz || 0) + storedQuartz;
+  free = Math.max(0, free - storedQuartz);
+
+  const producedSulfur = snapshot.sulfurRate * dtSec;
+  const storedSulfur = Math.min(producedSulfur, free);
+  const lostSulfur = producedSulfur - storedSulfur;
+  state.resources.sulfur += storedSulfur;
+  state.resources.wastedSulfur += lostSulfur;
+  state.progression.produced.sulfur = (state.progression.produced.sulfur || 0) + storedSulfur;
+  free = Math.max(0, free - storedSulfur);
+
+  const producedGold = snapshot.goldRate * dtSec;
+  const storedGold = Math.min(producedGold, free);
+  const lostGold = producedGold - storedGold;
+  state.resources.gold += storedGold;
+  state.resources.wastedGold += lostGold;
+  state.progression.produced.gold = (state.progression.produced.gold || 0) + storedGold;
+  free = Math.max(0, free - storedGold);
+
+  const producedLithium = snapshot.lithiumRate * dtSec;
+  const storedLithium = Math.min(producedLithium, free);
+  const lostLithium = producedLithium - storedLithium;
+  state.resources.lithium += storedLithium;
+  state.resources.wastedLithium += lostLithium;
+  state.progression.produced.lithium = (state.progression.produced.lithium || 0) + storedLithium;
+  free = Math.max(0, free - storedLithium);
 
   free = processConnectedRecipes(snapshot, dtSec, free);
 

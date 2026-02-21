@@ -130,11 +130,6 @@ h2 {
 }
 
 .resource-strip {
-  min-height: var(--hud-res-h);
-  border-radius: 10px;
-  border: 1px solid rgba(45, 106, 79, 0.16);
-  background: #eef9f2;
-  padding: 4px 6px;
   display: flex;
   gap: 6px;
   align-items: center;
@@ -419,6 +414,22 @@ h2 {
   background: linear-gradient(145deg, #7e8f9f, #5f7182);
 }
 
+.tile.quartz_miner {
+  background: linear-gradient(145deg, #7a5bb0, #5a4386);
+}
+
+.tile.sulfur_miner {
+  background: linear-gradient(145deg, #b2a33f, #8a7d2f);
+}
+
+.tile.gold_miner {
+  background: linear-gradient(145deg, #c19b3f, #94742c);
+}
+
+.tile.lithium_miner {
+  background: linear-gradient(145deg, #6f9fbd, #4f7792);
+}
+
 .tile.forge {
   background: linear-gradient(145deg, #7a4b58, #5b3841);
 }
@@ -491,12 +502,16 @@ h2 {
 .cable-line.flow-copper { stroke: #b06a48; }
 .cable-line.flow-oil { stroke: #5f5a6f; }
 .cable-line.flow-aluminum { stroke: #8191a1; }
+.cable-line.flow-quartz { stroke: #7a5bb0; }
+.cable-line.flow-sulfur { stroke: #b2a33f; }
 .cable-line.flow-parts { stroke: #8e5a7f; }
 .cable-line.flow-steel { stroke: #648189; }
 .cable-line.flow-plates { stroke: #56a1a1; }
 .cable-line.flow-silicon { stroke: #4ea8b4; }
 .cable-line.flow-plastic { stroke: #4aa07f; }
 .cable-line.flow-steam { stroke: #6f8fd1; }
+.cable-line.flow-glass { stroke: #6ca6d9; }
+.cable-line.flow-acid { stroke: #7fa647; }
 .cable-line.flow-modules { stroke: #3d8b5c; }
 .cable-line.flow-circuits { stroke: #3f9f7b; }
 .cable-line.flow-frames { stroke: #7b8b4a; }
@@ -504,6 +519,12 @@ h2 {
 .cable-line.flow-wiring { stroke: #d08b47; }
 .cable-line.flow-microchips { stroke: #4a8f6f; }
 .cable-line.flow-batteries { stroke: #6b84c9; }
+.cable-line.flow-fiber { stroke: #7cb8a8; }
+.cable-line.flow-composites { stroke: #4c8a95; }
+.cable-line.flow-gold { stroke: #c19b3f; }
+.cable-line.flow-lithium { stroke: #6f9fbd; }
+.cable-line.flow-superalloy { stroke: #7f8b9a; }
+.cable-line.flow-quantumchips { stroke: #4e86a6; }
 
 .cable-preview {
   stroke: #50a8ff;
@@ -523,39 +544,95 @@ h2 {
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin-top: 8px;
 }
 
 .actions.compact button {
-  min-height: 40px;
-  padding: 8px 10px;
+  min-height: 36px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: #f3f8f5;
+  color: var(--ink);
+  border: 1px solid rgba(45, 106, 79, 0.18);
+  font-size: 0.78rem;
+  flex: 1 1 calc(25% - 6px);
+}
+
+.actions.compact button:hover:not(:disabled) {
+  background: #e9f3ee;
 }
 
 .tool-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
   margin-top: 8px;
 }
 
 .mode-row {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(45, 106, 79, 0.2);
+  background: linear-gradient(180deg, #f6fbf8 0%, #eef7f2 100%);
 }
 
 .action-row {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.mode-row button {
+  min-height: 44px;
+  border-radius: 11px;
+  background: #e7f3ec;
+  color: #1f4f3d;
+  border: 1px solid rgba(45, 106, 79, 0.24);
+  font-size: 0.8rem;
+  font-weight: 800;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.mode-row button:hover:not(:disabled) {
+  background: #dff0e7;
+}
+
+.mode-row button.active {
+  background: linear-gradient(160deg, #2f7456 0%, #245842 100%);
+  color: #fff;
+  border-color: rgba(23, 59, 47, 0.65);
+  box-shadow: 0 8px 16px rgba(36, 88, 66, 0.26), inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.action-row button {
+  flex: 0 0 auto;
+  min-width: 84px;
+  min-height: 40px;
+  border-radius: 11px;
+  padding: 8px 11px;
+  background: #f3f8f5;
+  color: var(--ink);
+  border: 1px solid rgba(45, 106, 79, 0.2);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.action-row button:hover:not(:disabled) {
+  background: #e9f3ee;
 }
 
 .buy-picker {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-top: 8px;
-  padding: 6px;
-  border-radius: 10px;
-  background: #eef9f2;
-  border: 1px solid rgba(45, 106, 79, 0.14);
+  padding: 7px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f6fbf8 0%, #eef7f2 100%);
+  border: 1px solid rgba(45, 106, 79, 0.16);
   flex-wrap: wrap;
 }
 
@@ -567,9 +644,17 @@ h2 {
 }
 
 .buy-picker button {
-  min-height: 36px;
-  padding: 6px 10px;
+  min-height: 34px;
+  padding: 6px 9px;
   border-radius: 9px;
+  font-size: 0.76rem;
+  background: #e8f4ee;
+  color: var(--ink);
+  border: 1px solid rgba(45, 106, 79, 0.2);
+}
+
+.buy-picker button:hover:not(:disabled) {
+  background: #deeee4;
 }
 
 .buy-title {
@@ -584,6 +669,28 @@ h2 {
   font-weight: 800;
 }
 
+.icon-text-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.icon-text-btn .tool-icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: 0 0 auto;
+}
+
+.icon-text-btn span {
+  line-height: 1;
+}
+
 .quick-info {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -593,7 +700,7 @@ h2 {
 }
 
 button {
-  border: 0;
+  border: 1px solid rgba(45, 106, 79, 0.24);
   border-radius: 12px;
   background: var(--accent);
   color: white;
@@ -601,6 +708,7 @@ button {
   padding: 10px 13px;
   min-height: 44px;
   cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 70ms ease;
 }
 
 button:active:not(:disabled) {
@@ -638,36 +746,99 @@ button:disabled {
   background: rgba(45, 106, 79, 0.3);
 }
 
+.res-strip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 106, 79, 0.2);
+  background: rgba(45, 106, 79, 0.16);
+  color: var(--ink);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.res-strip-btn:hover:not(:disabled) {
+  background: rgba(45, 106, 79, 0.28);
+}
+
 #toolDeleteBtn {
-  background: var(--danger);
+  background: #f4e0e0;
+  color: #6f2f2f;
+  border-color: rgba(140, 65, 65, 0.35);
 }
 
 #toolDeleteBtn:hover:not(:disabled) {
-  background: #9d3e3e;
+  background: #edd1d1;
 }
 
 #resetPersistenceBtn {
-  background: #8e3a3a;
+  background: #f1dfdf;
+  color: #7c3434;
+  border-color: rgba(142, 58, 58, 0.32);
 }
 
 #resetPersistenceBtn:hover:not(:disabled) {
-  background: #a24646;
+  background: #e9cdcd;
 }
 
 #techUnlockIronBtn {
-  background: #7a6531;
+  background: #f2ebd8;
+  color: #695527;
+  border-color: rgba(122, 101, 49, 0.32);
 }
 
 #techUnlockIronBtn:hover:not(:disabled) {
-  background: #8f7739;
+  background: #ebdfbf;
 }
 
 #toolCableDeleteModeBtn {
-  background: #805143;
+  background: #efe2dd;
+  color: #6a463a;
+  border-color: rgba(128, 81, 67, 0.35);
 }
 
 #toolCableDeleteModeBtn:hover:not(:disabled) {
-  background: #965d4c;
+  background: #e7d5ce;
+}
+
+#toolCableDeleteModeBtn.active {
+  background: linear-gradient(165deg, #8a5a4b 0%, #71493c 100%);
+  color: #fff;
+  border-color: rgba(67, 39, 31, 0.7);
+}
+
+#toolBuyModeBtn {
+  font-size: 0.96rem;
+  letter-spacing: 0.02em;
+}
+
+#toolBuyModeBtn:hover:not(:disabled) {
+  background: #dff0e7;
+}
+
+#toolUpgradeBtn {
+  background: #ddefe5;
+  color: #1f5a43;
+}
+
+#toolRecipeBtn {
+  background: #dff0ef;
+  color: #235b5b;
+}
+
+#toolSellBtn {
+  background: #f5ead8;
+  color: #6f5420;
+  border-color: rgba(122, 97, 49, 0.32);
+}
+
+#toolSellBtn:hover:not(:disabled) {
+  background: #eeddbd;
 }
 
 .badge {
@@ -790,36 +961,41 @@ button:disabled {
 .tutorial-overlay {
   position: fixed;
   z-index: 50;
-  left: 8px;
-  right: 8px;
-  top: calc(var(--top-h) + 8px);
-  border-radius: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1200px, calc(100vw - 16px));
+  bottom: calc(var(--safe-b) + 8px);
+  max-height: min(38vh, 300px);
+  overflow: auto;
+  border-radius: 12px;
   border: 1px solid rgba(23, 59, 47, 0.24);
   background: rgba(255, 255, 255, 0.97);
   box-shadow: var(--shadow);
-  padding: 10px;
+  padding: 9px 10px;
 }
 
 .tutorial-overlay h3 {
-  margin: 0 0 4px;
-  font-size: 0.94rem;
+  margin: 0 0 3px;
+  font-size: 0.88rem;
 }
 
 .tutorial-overlay p {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: 0.79rem;
+  line-height: 1.35;
   color: var(--ink-soft);
 }
 
 .tutorial-actions {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  margin-top: 7px;
 }
 
 .tutorial-actions button {
-  min-height: 36px;
-  padding: 6px 10px;
+  min-height: 34px;
+  padding: 6px 9px;
+  font-size: 0.78rem;
 }
 
 @media (max-width: 980px) {
@@ -834,8 +1010,12 @@ button:disabled {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .action-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .action-row button {
+    min-width: 78px;
+  }
+
+  .actions.compact button {
+    flex-basis: calc(33.333% - 6px);
   }
 
   .flow-legend {

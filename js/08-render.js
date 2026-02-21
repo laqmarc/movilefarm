@@ -13,12 +13,18 @@ const FLOW_RESOURCE_LABELS = {
   copper: "Coure",
   oil: "Petroli",
   aluminum: "Alumini",
+  quartz: "Quars",
+  sulfur: "Sofre",
+  gold: "Or",
+  lithium: "Liti",
   parts: "Peces",
   steel: "Acer",
   plates: "Plaques",
   silicon: "Silici",
   plastic: "Plastic",
   steam: "Vapor",
+  glass: "Vidre",
+  acid: "Acid",
   modules: "Moduls",
   circuits: "Circuits",
   frames: "Bastidors",
@@ -26,6 +32,10 @@ const FLOW_RESOURCE_LABELS = {
   wiring: "Cablejat",
   microchips: "Microxips",
   batteries: "Bateries",
+  fiber: "Fibra",
+  composites: "Compostos",
+  superalloy: "Superaliatge",
+  quantumchips: "Quantum Xips",
 };
 
 function flowResourceLabel(resourceKey) {
@@ -92,12 +102,18 @@ function renderContract() {
     copper: "Coure",
     oil: "Petroli",
     aluminum: "Alumini",
+    quartz: "Quars",
+    sulfur: "Sofre",
+    gold: "Or",
+    lithium: "Liti",
     parts: "Peces",
     steel: "Acer",
     plates: "Plaques",
     silicon: "Silici",
     plastic: "Plastic",
     steam: "Vapor",
+    glass: "Vidre",
+    acid: "Acid",
     modules: "Moduls",
     circuits: "Circuits",
     frames: "Bastidors",
@@ -105,6 +121,10 @@ function renderContract() {
     wiring: "Cablejat",
     microchips: "Microxips",
     batteries: "Bateries",
+    fiber: "Fibra",
+    composites: "Compostos",
+    superalloy: "Superaliatge",
+    quantumchips: "Quantum Xips",
   };
 
   const requirementRows = (contract, showDelivered) =>
@@ -187,6 +207,10 @@ function nodeOutputResources(node) {
   if (node.type === "copper_miner") return ["copper"];
   if (node.type === "oil_miner") return ["oil"];
   if (node.type === "aluminum_miner") return ["aluminum"];
+  if (node.type === "quartz_miner") return ["quartz"];
+  if (node.type === "sulfur_miner") return ["sulfur"];
+  if (node.type === "gold_miner") return ["gold"];
+  if (node.type === "lithium_miner") return ["lithium"];
 
   const recipe = nodeRecipe(node);
   if (!recipe) return [];
@@ -204,6 +228,10 @@ function nodeOutputRatesPerSec(node) {
   if (node.type === "copper_miner") return { copper: copperMinerRatePerSec(node.level) };
   if (node.type === "oil_miner") return { oil: oilMinerRatePerSec(node.level) };
   if (node.type === "aluminum_miner") return { aluminum: aluminumMinerRatePerSec(node.level) };
+  if (node.type === "quartz_miner") return { quartz: quartzMinerRatePerSec(node.level) };
+  if (node.type === "sulfur_miner") return { sulfur: sulfurMinerRatePerSec(node.level) };
+  if (node.type === "gold_miner") return { gold: goldMinerRatePerSec(node.level) };
+  if (node.type === "lithium_miner") return { lithium: lithiumMinerRatePerSec(node.level) };
 
   const cfg = processorConfig(node);
   const recipe = nodeRecipe(node);
@@ -439,6 +467,18 @@ function render() {
   dom.aluminumMinerCostValue.textContent = state.tech.advancedMinesUnlocked
     ? `${formatInt(aluminumMinerPlacementCost())}$`
     : "Bloc";
+  dom.sulfurMinerCostValue.textContent = state.tech.materialsUnlocked
+    ? `${formatInt(sulfurMinerPlacementCost())}$`
+    : "Bloc";
+  dom.goldMinerCostValue.textContent = state.tech.endgameUnlocked
+    ? `${formatInt(goldMinerPlacementCost())}$`
+    : "Bloc";
+  dom.lithiumMinerCostValue.textContent = state.tech.endgameUnlocked
+    ? `${formatInt(lithiumMinerPlacementCost())}$`
+    : "Bloc";
+  dom.quartzMinerCostValue.textContent = state.tech.materialsUnlocked
+    ? `${formatInt(quartzMinerPlacementCost())}$`
+    : "Bloc";
   dom.forgeCostValue.textContent = state.tech.forgeUnlocked
     ? `${formatInt(forgePlacementCost())}$`
     : "Bloc";
@@ -473,6 +513,10 @@ function render() {
     state.ui.mode === "build_copper_miner" ||
     state.ui.mode === "build_oil_miner" ||
     state.ui.mode === "build_aluminum_miner" ||
+    state.ui.mode === "build_quartz_miner" ||
+    state.ui.mode === "build_sulfur_miner" ||
+    state.ui.mode === "build_gold_miner" ||
+    state.ui.mode === "build_lithium_miner" ||
     state.ui.mode === "build_forge" ||
     state.ui.mode === "build_assembler" ||
     state.ui.mode === "build_pole";
@@ -480,7 +524,9 @@ function render() {
   dom.toolCableModeBtn.classList.toggle("active", state.ui.mode === "connect");
   dom.toolCableDeleteModeBtn.classList.toggle("active", state.ui.mode === "disconnect");
   dom.toolInspectModeBtn.classList.toggle("active", state.ui.mode === "inspect");
-  dom.toolRecipeListBtn.classList.toggle("active", state.ui.recipePanelOpen);
+  if (dom.toolRecipeListBtn) {
+    dom.toolRecipeListBtn.classList.toggle("active", state.ui.recipePanelOpen);
+  }
   dom.buyMinerTypeBtn.classList.toggle("active", state.ui.buyType === "miner");
   dom.buyWoodMinerTypeBtn.classList.toggle("active", state.ui.buyType === "wood_miner");
   dom.buySandMinerTypeBtn.classList.toggle("active", state.ui.buyType === "sand_miner");
@@ -490,6 +536,10 @@ function render() {
   dom.buyCopperMinerTypeBtn.classList.toggle("active", state.ui.buyType === "copper_miner");
   dom.buyOilMinerTypeBtn.classList.toggle("active", state.ui.buyType === "oil_miner");
   dom.buyAluminumMinerTypeBtn.classList.toggle("active", state.ui.buyType === "aluminum_miner");
+  dom.buyQuartzMinerTypeBtn.classList.toggle("active", state.ui.buyType === "quartz_miner");
+  dom.buySulfurMinerTypeBtn.classList.toggle("active", state.ui.buyType === "sulfur_miner");
+  dom.buyGoldMinerTypeBtn.classList.toggle("active", state.ui.buyType === "gold_miner");
+  dom.buyLithiumMinerTypeBtn.classList.toggle("active", state.ui.buyType === "lithium_miner");
   dom.buyForgeTypeBtn.classList.toggle("active", state.ui.buyType === "forge");
   dom.buyAssemblerTypeBtn.classList.toggle("active", state.ui.buyType === "assembler");
   dom.buyPoleTypeBtn.classList.toggle("active", state.ui.buyType === "pole");
@@ -502,7 +552,9 @@ function render() {
 
   dom.toolUpgradeBtn.disabled = !selected || selectedCost === null || state.money < selectedCost;
   dom.toolRecipeBtn.disabled = !selected || !canChangeRecipe;
-  dom.toolRecipeListBtn.disabled = false;
+  if (dom.toolRecipeListBtn) {
+    dom.toolRecipeListBtn.disabled = false;
+  }
   dom.toolDeleteBtn.disabled = !isRemovableNode(selected);
   dom.toolSellBtn.disabled = totalStored < 1;
   dom.techUnlockIronBtn.disabled = !nextTech || state.money < nextTech.cost;
@@ -511,6 +563,10 @@ function render() {
   dom.buyCopperMinerTypeBtn.disabled = !state.tech.advancedMinesUnlocked;
   dom.buyOilMinerTypeBtn.disabled = !state.tech.advancedMinesUnlocked;
   dom.buyAluminumMinerTypeBtn.disabled = !state.tech.advancedMinesUnlocked;
+  dom.buyQuartzMinerTypeBtn.disabled = !state.tech.materialsUnlocked;
+  dom.buySulfurMinerTypeBtn.disabled = !state.tech.materialsUnlocked;
+  dom.buyGoldMinerTypeBtn.disabled = !state.tech.endgameUnlocked;
+  dom.buyLithiumMinerTypeBtn.disabled = !state.tech.endgameUnlocked;
   dom.buyForgeTypeBtn.disabled = !state.tech.forgeUnlocked;
   dom.buyAssemblerTypeBtn.disabled = !state.tech.assemblerUnlocked;
   dom.sell10Btn.disabled = totalStored < 1;
