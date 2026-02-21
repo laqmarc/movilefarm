@@ -1,8 +1,39 @@
-﻿function resourceDisplayEntries() {
+function resourceDisplayEntries() {
   return resourceCatalog().map((res) => ({
     ...res,
     amount: state.resources[res.key],
   }));
+}
+
+function resourceRatesPerSec() {
+  const snapshot = getNetworkSnapshot();
+  const rates = {
+    stone: snapshot.stoneRate || 0,
+    wood: snapshot.woodRate || 0,
+    sand: snapshot.sandRate || 0,
+    water: snapshot.waterRate || 0,
+    iron: snapshot.ironRate || 0,
+    coal: snapshot.coalRate || 0,
+    copper: snapshot.copperRate || 0,
+    oil: snapshot.oilRate || 0,
+    aluminum: snapshot.aluminumRate || 0,
+    quartz: snapshot.quartzRate || 0,
+    sulfur: snapshot.sulfurRate || 0,
+    gold: snapshot.goldRate || 0,
+    lithium: snapshot.lithiumRate || 0,
+  };
+
+  for (const [recipeId, scalePerSec] of Object.entries(snapshot.processorRates || {})) {
+    if (!Number.isFinite(scalePerSec) || scalePerSec <= 0) continue;
+    const recipe = RECIPES[recipeId];
+    if (!recipe || !recipe.outputs) continue;
+
+    for (const [resourceKey, amountPerScale] of Object.entries(recipe.outputs)) {
+      rates[resourceKey] = (rates[resourceKey] || 0) + amountPerScale * scalePerSec;
+    }
+  }
+
+  return rates;
 }
 
 function renderResourceStrip() {
@@ -28,11 +59,13 @@ function renderResourcePanel() {
     return;
   }
 
+  const rates = resourceRatesPerSec();
   const rows = resourceDisplayEntries()
     .map((res) => {
       const qty = res.unlocked ? formatCompact(res.amount) : "Bloc";
       const price = res.unlocked ? `${formatInt(res.price)}$` : "-";
-      return `<div class="res-row"><span>${res.label}</span><strong>${qty}</strong><span>${price}</span></div>`;
+      const prod = res.unlocked ? `${formatCompact(rates[res.key] || 0)} u/s` : "-";
+      return `<div class="res-row"><span>${res.label}</span><strong>${qty}</strong><span>${price}</span><span>${prod}</span></div>`;
     })
     .join("");
 
@@ -42,6 +75,7 @@ function renderResourcePanel() {
       <h3>Recursos</h3>
       <button type="button" id="closeResourcePanelBtn">Tancar</button>
     </div>
+    <div class="res-row res-row-head"><span>Recurs</span><span>Stock</span><span>Preu</span><span>Prod/s</span></div>
     ${rows}
   `;
 }
@@ -201,3 +235,4 @@ function renderTutorialOverlay() {
     </div>
   `;
 }
+
