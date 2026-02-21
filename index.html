@@ -86,6 +86,12 @@
         <span>Mant <strong id="maintenanceValue">0$/s</strong></span>
       </div>
       <div class="quick-info">
+        <span>Merc <strong id="marketShiftValue">x1.00</strong></span>
+        <span>RP <strong id="researchPointsValue">0</strong></span>
+        <span>Prest <strong id="prestigeValue">0</strong></span>
+        <span>Obj <strong id="objectivesValue">0</strong></span>
+      </div>
+      <div class="quick-info">
         <span>Tip <strong id="selectedTypeValue">-</strong></span>
         <span>Nv <strong id="selectedLevelValue">-</strong></span>
         <span>Up <strong id="selectedUpgradeCostValue">-</strong></span>
@@ -93,9 +99,11 @@
       </div>
       <div class="actions compact">
         <button id="toggleAutoSellBtn">Auto Tot OFF</button>
+        <button id="cycleFlowFilterBtn">Flux Tot</button>
         <button id="sell10Btn">+10u</button>
         <button id="sellAllBtn">Tot</button>
         <button id="clearSelectionBtn">Neteja</button>
+        <button id="openTutorialBtn">Tutorial</button>
         <button id="resetPersistenceBtn">Reinici</button>
       </div>
       <details class="contract-box">
@@ -107,9 +115,21 @@
           <button id="rerollContractBtn">Nou</button>
         </div>
       </details>
+      <details class="contract-box">
+        <summary>Recerca</summary>
+        <div id="researchTree" class="contract-block"></div>
+      </details>
+      <details class="contract-box">
+        <summary>Objectius i Prestigi</summary>
+        <div id="objectivesPanel" class="contract-block"></div>
+        <div class="actions compact">
+          <button id="prestigeBtn">Prestigi</button>
+        </div>
+      </details>
     </section>
   </main>
 
+  <aside id="tutorialOverlay" class="tutorial-overlay hidden"></aside>
   <div id="toast" class="toast hidden"></div>
   <script src="js/01-bootstrap.js"></script>
   <script src="js/02-model.js"></script>

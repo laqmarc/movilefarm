@@ -78,7 +78,7 @@ function findSnapTargetId(sourceId) {
 
   for (const node of state.nodes) {
     if (node.id === sourceId) continue;
-    if (distanceBetweenNodes(sourceNode, node) > CONFIG.cableMaxDistance) continue;
+    if (distanceBetweenNodes(sourceNode, node) > cableMaxDistance()) continue;
 
     const center = nodeCenterPx(node);
     const dx = state.ui.drag.pointerX - center.x;

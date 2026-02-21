@@ -364,6 +364,27 @@ h2 {
   stroke: var(--wire-active);
 }
 
+.cable-line.flow-faded {
+  opacity: 0.22;
+}
+
+.cable-line.flow-match {
+  opacity: 1;
+  stroke-width: 6;
+}
+
+.cable-line.flow-stone { stroke: #6f7f8f; }
+.cable-line.flow-wood { stroke: #8a6a48; }
+.cable-line.flow-iron { stroke: #53779d; }
+.cable-line.flow-coal { stroke: #55595f; }
+.cable-line.flow-copper { stroke: #b06a48; }
+.cable-line.flow-parts { stroke: #8e5a7f; }
+.cable-line.flow-steel { stroke: #648189; }
+.cable-line.flow-plates { stroke: #56a1a1; }
+.cable-line.flow-modules { stroke: #3d8b5c; }
+.cable-line.flow-circuits { stroke: #3f9f7b; }
+.cable-line.flow-frames { stroke: #7b8b4a; }
+
 .cable-preview {
   stroke: #50a8ff;
   stroke-width: 4;
@@ -603,6 +624,72 @@ button:disabled {
   font-weight: 700;
   cursor: pointer;
   color: var(--ink-soft);
+}
+
+.research-row,
+.objective-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(23, 59, 47, 0.16);
+}
+
+.research-row small,
+.objective-row small {
+  color: var(--ink-soft);
+  font-size: 0.74rem;
+}
+
+.research-row button {
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  font-size: 0.78rem;
+}
+
+.research-row.done button {
+  background: #2f8f57;
+}
+
+.research-row.locked {
+  opacity: 0.7;
+}
+
+.tutorial-overlay {
+  position: fixed;
+  z-index: 50;
+  left: 8px;
+  right: 8px;
+  top: calc(var(--top-h) + 8px);
+  border-radius: 14px;
+  border: 1px solid rgba(23, 59, 47, 0.24);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: var(--shadow);
+  padding: 10px;
+}
+
+.tutorial-overlay h3 {
+  margin: 0 0 4px;
+  font-size: 0.94rem;
+}
+
+.tutorial-overlay p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.tutorial-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tutorial-actions button {
+  min-height: 36px;
+  padding: 6px 10px;
 }
 
 @media (max-width: 980px) {

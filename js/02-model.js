@@ -93,32 +93,142 @@ function poleNodes() {
   return state.nodes.filter((node) => node.type === "pole");
 }
 
+const RESEARCH_TREE = [
+  {
+    id: "rs_mining_drill",
+    name: "Drill Eficient",
+    cost: 36,
+    prereqs: [],
+    desc: "+15% produccio miners",
+  },
+  {
+    id: "rs_logistics",
+    name: "Logistica",
+    cost: 44,
+    prereqs: [],
+    desc: "+1 rang de cable",
+  },
+  {
+    id: "rs_market_analytics",
+    name: "Analitica Mercat",
+    cost: 52,
+    prereqs: [],
+    desc: "Mercat mes estable",
+  },
+  {
+    id: "rs_forge_mastery",
+    name: "Farga Pro",
+    cost: 78,
+    prereqs: ["rs_mining_drill"],
+    desc: "+20% produccio farga",
+  },
+  {
+    id: "rs_assembler_efficiency",
+    name: "Assembler Pro",
+    cost: 95,
+    prereqs: ["rs_forge_mastery"],
+    desc: "+20% produccio assembler",
+  },
+  {
+    id: "rs_premium_contracts",
+    name: "Contractes Premium",
+    cost: 110,
+    prereqs: ["rs_market_analytics", "rs_assembler_efficiency"],
+    desc: "Desbloqueja contractes de cadena",
+  },
+];
+
+const OBJECTIVES = [
+  { id: "obj_stock_140", label: "Omple 140u de stock", target: 140, kind: "stock" },
+  { id: "obj_sell_200", label: "Ven 200u totals", target: 200, kind: "sold_units" },
+  { id: "obj_unlock_forge", label: "Desbloqueja Farga", target: 1, kind: "unlock_forge" },
+  { id: "obj_research_3", label: "Desbloqueja 3 recerques", target: 3, kind: "research_count" },
+  { id: "obj_contract_3", label: "Completa 3 contractes", target: 3, kind: "contracts_done" },
+  { id: "obj_modules_60", label: "Produeix 60 moduls", target: 60, kind: "produced_modules" },
+  { id: "obj_circuits_60", label: "Produeix 60 circuits", target: 60, kind: "produced_circuits" },
+  { id: "obj_money_5000", label: "Guanya 5.000$", target: 5000, kind: "money_earned" },
+];
+
+function researchNodeById(id) {
+  return RESEARCH_TREE.find((node) => node.id === id) || null;
+}
+
+function hasResearch(id, researchState = state.research) {
+  return !!(researchState && researchState.unlocked && researchState.unlocked[id]);
+}
+
+function unlockedResearchCount() {
+  return Object.values(state.research.unlocked || {}).filter(Boolean).length;
+}
+
+function researchPointsMultiplier() {
+  const prestigeBonus = 1 + (state.progression.prestigeLevel || 0) * 0.06;
+  return prestigeBonus;
+}
+
+function premiumContractsUnlocked(researchState = state.research) {
+  return hasResearch("rs_premium_contracts", researchState);
+}
+
+function prestigeProductionMultiplier() {
+  return 1 + (state.progression.prestigeLevel || 0) * 0.12;
+}
+
+function productionMultiplierFor(type) {
+  let multiplier = prestigeProductionMultiplier();
+
+  const isMiner =
+    type === "miner" ||
+    type === "wood_miner" ||
+    type === "iron_miner" ||
+    type === "coal_miner" ||
+    type === "copper_miner";
+
+  if (isMiner && hasResearch("rs_mining_drill")) {
+    multiplier *= 1.15;
+  }
+  if (type === "forge" && hasResearch("rs_forge_mastery")) {
+    multiplier *= 1.2;
+  }
+  if (type === "assembler" && hasResearch("rs_assembler_efficiency")) {
+    multiplier *= 1.2;
+  }
+
+  return multiplier;
+}
+
+function cableMaxDistance() {
+  const researchBonus = hasResearch("rs_logistics") ? 1 : 0;
+  const prestigeBonus = Math.floor((state.progression.prestigeLevel || 0) / 3);
+  return CONFIG.cableMaxDistance + researchBonus + prestigeBonus;
+}
+
 function minerRatePerSec(level) {
-  return 1 * (1 + (level - 1) * 0.35);
+  return 1 * (1 + (level - 1) * 0.35) * productionMultiplierFor("miner");
 }
 
 function woodMinerRatePerSec(level) {
-  return 0.8 * (1 + (level - 1) * 0.32);
+  return 0.8 * (1 + (level - 1) * 0.32) * productionMultiplierFor("wood_miner");
 }
 
 function ironMinerRatePerSec(level) {
-  return 0.55 * (1 + (level - 1) * 0.28);
+  return 0.55 * (1 + (level - 1) * 0.28) * productionMultiplierFor("iron_miner");
 }
 
 function coalMinerRatePerSec(level) {
-  return 0.62 * (1 + (level - 1) * 0.27);
+  return 0.62 * (1 + (level - 1) * 0.27) * productionMultiplierFor("coal_miner");
 }
 
 function copperMinerRatePerSec(level) {
-  return 0.52 * (1 + (level - 1) * 0.29);
+  return 0.52 * (1 + (level - 1) * 0.29) * productionMultiplierFor("copper_miner");
 }
 
 function forgeRatePerSec(level) {
-  return 0.36 * (1 + (level - 1) * 0.24);
+  return 0.36 * (1 + (level - 1) * 0.24) * productionMultiplierFor("forge");
 }
 
 function assemblerRatePerSec(level) {
-  return 0.24 * (1 + (level - 1) * 0.23);
+  return 0.24 * (1 + (level - 1) * 0.23) * productionMultiplierFor("assembler");
 }
 
 const PROCESSOR_NODE_TYPES = {

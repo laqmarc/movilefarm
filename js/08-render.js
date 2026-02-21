@@ -1,4 +1,8 @@
-﻿function renderContract() {
+﻿function contractTierLabel(tier) {
+  return tier === "premium" ? "Premium" : "Normal";
+}
+
+function renderContract() {
   const { offer, active } = state.contract;
   const labelByKey = {
     stone: "Pedra",
@@ -29,9 +33,12 @@
       .join("");
 
   if (active) {
-    const remainingSec = Math.max(0, Math.ceil((active.deadlineAt - Date.now()) / 1000));
+    const remainingSec = Number.isFinite(active.deadlineAt)
+      ? Math.max(0, Math.ceil((active.deadlineAt - Date.now()) / 1000))
+      : 0;
     dom.contractOffer.innerHTML = `
       <div class="contract-line"><span>Estat</span><strong>Actiu</strong></div>
+      <div class="contract-line"><span>Tipus</span><strong>${contractTierLabel(active.tier)}</strong></div>
       ${requirementRows(active, true)}
       <div class="contract-line"><span>Temps restant</span><strong>${remainingSec}s</strong></div>
       <div class="contract-line"><span>Recompensa</span><strong>${formatInt(active.reward)}$</strong></div>
@@ -43,6 +50,7 @@
   if (offer) {
     dom.contractOffer.innerHTML = `
       <div class="contract-line"><span>Estat</span><strong>Pendent</strong></div>
+      <div class="contract-line"><span>Tipus</span><strong>${contractTierLabel(offer.tier)}</strong></div>
       ${requirementRows(offer, false)}
       <div class="contract-line"><span>Temps</span><strong>${offer.durationSec}s</strong></div>
       <div class="contract-line"><span>Recompensa</span><strong>${formatInt(offer.reward)}$</strong></div>
@@ -54,6 +62,85 @@
   dom.contractOffer.innerHTML = `
     <div class="contract-line"><span>Sense ofertes</span><strong>Generant...</strong></div>
   `;
+}
+
+function nodeOutputResources(node) {
+  if (!node) return [];
+  if (node.type === "miner") return ["stone"];
+  if (node.type === "wood_miner") return ["wood"];
+  if (node.type === "iron_miner") return ["iron"];
+  if (node.type === "coal_miner") return ["coal"];
+  if (node.type === "copper_miner") return ["copper"];
+
+  const recipe = nodeRecipe(node);
+  if (!recipe) return [];
+  return Object.keys(recipe.outputs || {});
+}
+
+function shortestPathEdgeKeys(startId, targetId, adjacency) {
+  if (!startId || !targetId) return [];
+  if (!adjacency.has(startId) || !adjacency.has(targetId)) return [];
+  if (startId === targetId) return [];
+
+  const queue = [startId];
+  const previous = new Map([[startId, null]]);
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (current === targetId) break;
+
+    const linked = adjacency.get(current) || new Set();
+    for (const next of linked) {
+      if (previous.has(next)) continue;
+      previous.set(next, current);
+      queue.push(next);
+    }
+  }
+
+  if (!previous.has(targetId)) {
+    return [];
+  }
+
+  const edges = [];
+  let current = targetId;
+  while (current !== startId) {
+    const prev = previous.get(current);
+    if (!prev) break;
+    edges.push(edgeKey(prev, current));
+    current = prev;
+  }
+
+  return edges;
+}
+
+function buildFlowEdgesByResource(snapshot) {
+  const map = new Map();
+  const warehouse = snapshot.warehouseNode;
+  if (!warehouse) return map;
+
+  const adjacency = buildAdjacency();
+  for (const node of state.nodes) {
+    if (node.id === warehouse.id) continue;
+    if (!snapshot.reachableFromWarehouse.has(node.id)) continue;
+
+    const outputs = nodeOutputResources(node);
+    if (outputs.length < 1) continue;
+
+    const pathEdges = shortestPathEdgeKeys(node.id, warehouse.id, adjacency);
+    if (pathEdges.length < 1) continue;
+
+    for (const resourceKey of outputs) {
+      if (!map.has(resourceKey)) {
+        map.set(resourceKey, new Set());
+      }
+      const set = map.get(resourceKey);
+      for (const edge of pathEdges) {
+        set.add(edge);
+      }
+    }
+  }
+
+  return map;
 }
 
 function renderGrid(snapshot) {
@@ -84,6 +171,10 @@ function renderCables(snapshot) {
   const height = worldHeightPx();
   const cellW = CONFIG.cellSizePx;
   const cellH = CONFIG.cellSizePx;
+  const flowResource = state.ui.flowResource || "all";
+  const flowEdgesByResource = buildFlowEdgesByResource(snapshot);
+  const selectedFlowEdges =
+    flowResource === "all" ? null : flowEdgesByResource.get(flowResource) || new Set();
 
   dom.cableLayer.setAttribute("viewBox", `0 0 ${width} ${height}`);
   dom.cableLayer.setAttribute("width", width);
@@ -103,8 +194,18 @@ function renderCables(snapshot) {
     const active =
       snapshot.reachableFromWarehouse.has(a) && snapshot.reachableFromWarehouse.has(b);
 
+    const classList = ["cable-line"];
+    if (active) classList.push("active");
+    if (flowResource !== "all") {
+      if (selectedFlowEdges.has(cable)) {
+        classList.push("flow-match", `flow-${flowResource}`);
+      } else {
+        classList.push("flow-faded");
+      }
+    }
+
     lines.push(
-      `<line class="cable-line ${active ? "active" : ""}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`
+      `<line class="${classList.join(" ")}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`
     );
   }
 
@@ -142,6 +243,13 @@ function render() {
   const selectedCost = selected ? upgradeCost(selected) : null;
   const selectedRecipe = selected ? nodeRecipeLabel(selected) : "-";
   const canChangeRecipe = canCycleRecipe(selected);
+  const marketShift = Number(state.market.averageMultiplier) || 1;
+  const completedObjectives = completedObjectivesCount();
+  const flowOption =
+    flowFilterOptions().find((option) => option.key === state.ui.flowResource) || {
+      key: "all",
+      label: "Tot",
+    };
   clampCamera();
   applyCameraTransform();
 
@@ -168,11 +276,16 @@ function render() {
     : "Bloc";
   dom.poleCostValue.textContent = `${formatInt(polePlacementCost())}$`;
   dom.cableCostValue.textContent = `${formatInt(CONFIG.cableCost)}$`;
-  dom.cableRangeValue.textContent = `${formatCompact(CONFIG.cableMaxDistance)} cel.les`;
+  dom.cableRangeValue.textContent = `${formatCompact(cableMaxDistance())} cel.les`;
   dom.autoSellValue.textContent = state.autoSellEnabled ? "ON" : "OFF";
   dom.maintenanceValue.textContent = `${formatCompact(state.economy.lastMaintenancePerSec)}$/s`;
+  dom.marketShiftValue.textContent = `x${marketShift.toFixed(2)}`;
+  dom.researchPointsValue.textContent = formatInt(Math.floor(state.research.points || 0));
+  dom.prestigeValue.textContent = formatInt(state.progression.prestigeLevel || 0);
+  dom.objectivesValue.textContent = `${completedObjectives}/${OBJECTIVES.length}`;
   dom.modeLabel.textContent = modeLabel(state.ui.mode);
   dom.toggleAutoSellBtn.textContent = state.autoSellEnabled ? "Auto Tot ON" : "Auto Tot OFF";
+  dom.cycleFlowFilterBtn.textContent = `Flux ${flowOption.label}`;
   const nextTech = nextTechnologyToUnlock();
   dom.techUnlockIronBtn.textContent = nextTech
     ? `Tech ${nextTech.label} ${formatInt(nextTech.cost)}$`
@@ -219,11 +332,15 @@ function render() {
   dom.sell10Btn.disabled = totalStored < 1;
   dom.sellAllBtn.disabled = totalStored < 1;
   dom.acceptContractBtn.disabled = !state.contract.offer || !!state.contract.active;
-  dom.deliverContractBtn.disabled = !state.contract.active || !canDeliverToContract(state.contract.active);
+  dom.deliverContractBtn.disabled =
+    !state.contract.active || !canDeliverToContract(state.contract.active);
   dom.rerollContractBtn.disabled = !!state.contract.active;
+  dom.prestigeBtn.disabled = !canPrestigeNow();
 
   renderContract();
   renderResourcePanel();
+  renderResearchTree();
+  renderObjectivesPanel();
+  renderTutorialOverlay();
   renderGrid(snapshot);
 }
-

@@ -217,6 +217,10 @@ function bindEvents() {
     render();
   });
 
+  dom.cycleFlowFilterBtn.addEventListener("click", () => {
+    cycleFlowFilter();
+  });
+
   dom.sell10Btn.addEventListener("click", () => {
     sellResourceUnits(10);
   });
@@ -265,6 +269,10 @@ function bindEvents() {
     render();
   });
 
+  dom.openTutorialBtn.addEventListener("click", () => {
+    tutorialOpen();
+  });
+
   dom.resetPersistenceBtn.addEventListener("click", () => {
     resetPersistence();
   });
@@ -283,6 +291,31 @@ function bindEvents() {
     if (state.contract.active) return;
     nextContractOffer();
     render();
+  });
+
+  dom.researchTree.addEventListener("click", (event) => {
+    const button = event.target ? event.target.closest("[data-research-id]") : null;
+    if (!button) return;
+    const researchId = button.dataset.researchId;
+    if (!researchId) return;
+    unlockResearch(researchId);
+  });
+
+  dom.prestigeBtn.addEventListener("click", () => {
+    prestigeReset();
+  });
+
+  dom.tutorialOverlay.addEventListener("click", (event) => {
+    const button = event.target ? event.target.closest("[data-tutorial-action]") : null;
+    if (!button) return;
+    const action = button.dataset.tutorialAction;
+    if (action === "next") {
+      tutorialNext();
+      return;
+    }
+    if (action === "skip") {
+      tutorialDismiss();
+    }
   });
 
   window.addEventListener("resize", () => {

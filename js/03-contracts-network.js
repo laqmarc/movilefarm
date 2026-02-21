@@ -61,32 +61,75 @@ function normalizeContract(contract) {
   };
 }
 
-function createContractOffer(id, techState = null) {
+function createContractOffer(id, context = null) {
+  const techState = context && context.tech ? context.tech : defaultTechState();
+  const researchState = context && context.research ? context.research : { unlocked: {} };
   const pool = contractResourcePool(techState || defaultTechState());
   const totalUnlocked = pool.length;
-  const maxReq = totalUnlocked >= 5 ? 3 : totalUnlocked >= 3 ? 2 : 1;
-  const minReq = totalUnlocked >= 2 ? 2 : 1;
-  const reqCount = Math.max(1, Math.min(maxReq, minReq + Math.floor(Math.random() * maxReq)));
-  const picks = [...pool].sort(() => Math.random() - 0.5).slice(0, reqCount);
+  const premiumRoll = premiumContractsUnlocked(researchState) && totalUnlocked >= 6 && Math.random() < 0.3;
+  let tier = premiumRoll ? "premium" : "normal";
+  let requirements = [];
 
-  const requirements = picks.map((res) => {
-    const baseUnits = 28 + Math.random() * 60;
-    const qtyScale = 1.45 / Math.sqrt(Math.max(1, res.price));
-    const required = Math.max(6, Math.round(baseUnits * qtyScale));
-    return { key: res.key, required };
-  });
+  if (premiumRoll) {
+    const premiumCandidates = pool.filter((res) =>
+      ["plates", "circuits", "modules", "frames"].includes(res.key)
+    );
+    const supportCandidates = pool.filter((res) =>
+      ["parts", "steel", "copper", "coal", "iron"].includes(res.key)
+    );
+    if (premiumCandidates.length > 0) {
+      const picks = [];
+      picks.push(premiumCandidates[Math.floor(Math.random() * premiumCandidates.length)]);
+      if (premiumCandidates.length > 1) {
+        picks.push(premiumCandidates[Math.floor(Math.random() * premiumCandidates.length)]);
+      } else if (supportCandidates.length > 0) {
+        picks.push(supportCandidates[Math.floor(Math.random() * supportCandidates.length)]);
+      }
+      if (supportCandidates.length > 0) {
+        picks.push(supportCandidates[Math.floor(Math.random() * supportCandidates.length)]);
+      }
+      const unique = Array.from(new Map(picks.map((item) => [item.key, item])).values());
+      requirements = unique.map((res) => {
+        const baseUnits = 34 + Math.random() * 68;
+        const qtyScale = 1.32 / Math.sqrt(Math.max(1, res.price));
+        const required = Math.max(10, Math.round(baseUnits * qtyScale));
+        return { key: res.key, required };
+      });
+    } else {
+      tier = "normal";
+    }
+  }
+
+  if (tier === "normal") {
+    const maxReq = totalUnlocked >= 5 ? 3 : totalUnlocked >= 3 ? 2 : 1;
+    const minReq = totalUnlocked >= 2 ? 2 : 1;
+    const reqCount = Math.max(1, Math.min(maxReq, minReq + Math.floor(Math.random() * maxReq)));
+    const picks = [...pool].sort(() => Math.random() - 0.5).slice(0, reqCount);
+    requirements = picks.map((res) => {
+      const baseUnits = 28 + Math.random() * 60;
+      const qtyScale = 1.45 / Math.sqrt(Math.max(1, res.price));
+      const required = Math.max(6, Math.round(baseUnits * qtyScale));
+      return { key: res.key, required };
+    });
+  }
 
   const totalValue = requirements.reduce((sum, req) => {
     const meta = pool.find((res) => res.key === req.key);
     return sum + req.required * (meta ? meta.price : 1);
   }, 0);
-  const rewardMultiplier = 1.5 + Math.random() * 0.75;
+  const rewardMultiplier = tier === "premium" ? 2.15 + Math.random() * 0.95 : 1.5 + Math.random() * 0.75;
   const reward = Math.round(totalValue * rewardMultiplier);
-  const penalty = Math.max(14, Math.round(reward * 0.24));
-  const durationSec = Math.floor(85 + totalValue * 0.7 + reqCount * 18 + Math.random() * 55);
+  const penalty = Math.max(14, Math.round(reward * (tier === "premium" ? 0.3 : 0.24)));
+  const durationSec = Math.floor(
+    (tier === "premium" ? 120 : 85) +
+      totalValue * 0.7 +
+      requirements.length * 18 +
+      Math.random() * 55
+  );
 
   return {
     id,
+    tier,
     requirements,
     durationSec,
     reward,
@@ -96,7 +139,10 @@ function createContractOffer(id, techState = null) {
 
 function nextContractOffer() {
   state.contract.lastId += 1;
-  state.contract.offer = createContractOffer(state.contract.lastId, state.tech);
+  state.contract.offer = createContractOffer(state.contract.lastId, {
+    tech: state.tech,
+    research: state.research,
+  });
 }
 
 function acceptContract() {
@@ -159,9 +205,17 @@ function deliverToContract() {
 
   if (contractIsComplete(active)) {
     state.money += active.reward;
+    state.progression.totalMoneyEarned += active.reward;
+    state.progression.contractsCompleted += 1;
+    if (active.tier === "premium") {
+      state.progression.contractsPremiumCompleted += 1;
+      state.research.points += 12;
+    } else {
+      state.research.points += 4;
+    }
     state.contract.active = null;
     nextContractOffer();
-    showToast("Contracte completat");
+    showToast(active.tier === "premium" ? "Contracte premium completat" : "Contracte completat");
     return;
   }
 
