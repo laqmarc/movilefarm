@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movile Farm</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="background-shape"></div>
+    <main class="app">
+      <header class="topbar card">
+        <div>
+          <h1>Movile Farm</h1>
+          <p class="subtitle">Prototype d'automatitzacio: miner, magatzem i venda</p>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <span>Diners</span>
+            <strong id="moneyValue">0</strong>
+          </div>
+          <div class="stat">
+            <span>Pedra</span>
+            <strong id="stoneValue">0 / 0</strong>
+          </div>
+          <div class="stat">
+            <span>Produccio</span>
+            <strong id="productionValue">0 /s</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="grid">
+        <article class="card">
+          <h2>Maquines</h2>
+          <p class="muted">Primer item: miner que extreu pedra.</p>
+          <div class="info-row">
+            <span>Miners</span>
+            <strong id="minerCount">0</strong>
+          </div>
+          <div class="info-row">
+            <span>Nivell miner</span>
+            <strong id="minerLevel">1</strong>
+          </div>
+          <div class="actions">
+            <button id="buyMinerBtn"></button>
+            <button id="upgradeMinerBtn"></button>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Magatzem</h2>
+          <p class="muted">La pedra s'acumula aqui abans de vendre.</p>
+          <div class="info-row">
+            <span>Nivell</span>
+            <strong id="warehouseLevel">1</strong>
+          </div>
+          <div class="info-row">
+            <span>Capacitat</span>
+            <strong id="capacityValue">0</strong>
+          </div>
+          <div class="actions">
+            <button id="upgradeWarehouseBtn"></button>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Connexions</h2>
+          <p class="muted">Sistema simple de connexio entre zones.</p>
+          <label class="switch-row">
+            <input id="minerToWarehouseToggle" type="checkbox" />
+            <span>Miner -> Magatzem</span>
+          </label>
+          <label class="switch-row">
+            <input id="warehouseToMarketToggle" type="checkbox" />
+            <span>Magatzem -> Mercat (auto-venda)</span>
+          </label>
+          <div class="badge-row">
+            <span id="flowStatus" class="badge">Flux aturat</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Mercat</h2>
+          <p class="muted">Ven pedra per guanyar diners.</p>
+          <div class="info-row">
+            <span>Preu pedra</span>
+            <strong id="stonePriceValue">0</strong>
+          </div>
+          <div class="actions">
+            <button id="sell10Btn">Vendre 10</button>
+            <button id="sellAllBtn">Vendre tot</button>
+          </div>
+        </article>
+
+        <article class="card full">
+          <h2>Contractes (v1)</h2>
+          <p class="muted">Entrega pedra dins del temps per una recompensa millor.</p>
+          <div id="contractOffer" class="contract-block"></div>
+          <div class="actions">
+            <button id="acceptContractBtn">Acceptar contracte</button>
+            <button id="deliverContractBtn">Entregar pedra</button>
+            <button id="rerollContractBtn">Nou contracte</button>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
