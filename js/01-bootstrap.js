@@ -340,7 +340,7 @@ function createDefaultState() {
       { id: "market-1", type: "market", row: 3, col: 5, level: 1, fixed: true },
       { id: "miner-1", type: "miner", row: 1, col: 1, level: 1, fixed: false },
     ],
-    cables: [edgeKey("miner-1", "warehouse-1")],
+    cables: [edgeKey("miner-1", "warehouse-1"), edgeKey("warehouse-1", "market-1")],
     nextMinerId: 2,
     nextWoodMinerId: 1,
     nextSandMinerId: 1,
