@@ -11,7 +11,18 @@ const CONFIG = {
   stonePrice: 1,
   woodPrice: 2,
   ironPrice: 4,
+  coalPrice: 3,
+  copperPrice: 5,
+  partsPrice: 9,
+  steelPrice: 11,
+  platesPrice: 10,
+  modulesPrice: 18,
+  circuitsPrice: 22,
+  framesPrice: 16,
   ironUnlockCost: 380,
+  forgeUnlockCost: 640,
+  advancedMinesUnlockCost: 920,
+  assemblerUnlockCost: 1450,
   autoSellRatePerSec: 8,
   initialMoney: 170,
   minerBaseCost: 30,
@@ -20,6 +31,32 @@ const CONFIG = {
   woodMinerCostScale: 1.48,
   ironMinerBaseCost: 85,
   ironMinerCostScale: 1.52,
+  coalMinerBaseCost: 110,
+  coalMinerCostScale: 1.5,
+  copperMinerBaseCost: 122,
+  copperMinerCostScale: 1.52,
+  forgeBaseCost: 160,
+  forgeCostScale: 1.55,
+  assemblerBaseCost: 230,
+  assemblerCostScale: 1.56,
+  forgeWoodPerUnit: 0.7,
+  forgeIronPerUnit: 0.45,
+  forgePartsPerUnit: 0.62,
+  forgeSteelIronPerUnit: 0.82,
+  forgeSteelCoalPerUnit: 0.58,
+  forgeSteelPerUnit: 0.5,
+  forgePlatesCopperPerUnit: 0.88,
+  forgePlatesCoalPerUnit: 0.42,
+  forgePlatesPerUnit: 0.55,
+  assemblerPartsPerUnit: 0.78,
+  assemblerPlatesPerUnit: 0.65,
+  assemblerModulesPerUnit: 0.48,
+  assemblerCircuitPartsPerUnit: 0.72,
+  assemblerCircuitCopperPerUnit: 0.8,
+  assemblerCircuitsPerUnit: 0.52,
+  assemblerFrameSteelPerUnit: 0.64,
+  assemblerFramePlatesPerUnit: 0.7,
+  assemblerFramesPerUnit: 0.5,
   poleBaseCost: 18,
   poleCostScale: 1.22,
   cableCost: 6,
@@ -45,6 +82,10 @@ const dom = {
   minerCostValue: document.getElementById("minerCostValue"),
   woodMinerCostValue: document.getElementById("woodMinerCostValue"),
   ironMinerCostValue: document.getElementById("ironMinerCostValue"),
+  coalMinerCostValue: document.getElementById("coalMinerCostValue"),
+  copperMinerCostValue: document.getElementById("copperMinerCostValue"),
+  forgeCostValue: document.getElementById("forgeCostValue"),
+  assemblerCostValue: document.getElementById("assemblerCostValue"),
   poleCostValue: document.getElementById("poleCostValue"),
   cableCostValue: document.getElementById("cableCostValue"),
   cableRangeValue: document.getElementById("cableRangeValue"),
@@ -57,14 +98,20 @@ const dom = {
   cableLayer: document.getElementById("cableLayer"),
   toolBuyModeBtn: document.getElementById("toolBuyModeBtn"),
   toolCableModeBtn: document.getElementById("toolCableModeBtn"),
+  toolCableDeleteModeBtn: document.getElementById("toolCableDeleteModeBtn"),
   toolInspectModeBtn: document.getElementById("toolInspectModeBtn"),
   toolUpgradeBtn: document.getElementById("toolUpgradeBtn"),
+  toolRecipeBtn: document.getElementById("toolRecipeBtn"),
   toolDeleteBtn: document.getElementById("toolDeleteBtn"),
   techUnlockIronBtn: document.getElementById("techUnlockIronBtn"),
   toolSellBtn: document.getElementById("toolSellBtn"),
   buyMinerTypeBtn: document.getElementById("buyMinerTypeBtn"),
   buyWoodMinerTypeBtn: document.getElementById("buyWoodMinerTypeBtn"),
   buyIronMinerTypeBtn: document.getElementById("buyIronMinerTypeBtn"),
+  buyCoalMinerTypeBtn: document.getElementById("buyCoalMinerTypeBtn"),
+  buyCopperMinerTypeBtn: document.getElementById("buyCopperMinerTypeBtn"),
+  buyForgeTypeBtn: document.getElementById("buyForgeTypeBtn"),
+  buyAssemblerTypeBtn: document.getElementById("buyAssemblerTypeBtn"),
   buyPoleTypeBtn: document.getElementById("buyPoleTypeBtn"),
   toggleAutoSellBtn: document.getElementById("toggleAutoSellBtn"),
   sell10Btn: document.getElementById("sell10Btn"),
@@ -72,6 +119,7 @@ const dom = {
   selectedTypeValue: document.getElementById("selectedTypeValue"),
   selectedLevelValue: document.getElementById("selectedLevelValue"),
   selectedUpgradeCostValue: document.getElementById("selectedUpgradeCostValue"),
+  selectedRecipeValue: document.getElementById("selectedRecipeValue"),
   clearSelectionBtn: document.getElementById("clearSelectionBtn"),
   contractOffer: document.getElementById("contractOffer"),
   acceptContractBtn: document.getElementById("acceptContractBtn"),
@@ -109,9 +157,25 @@ function createDefaultState() {
       stone: 0,
       wood: 0,
       iron: 0,
+      coal: 0,
+      copper: 0,
+      parts: 0,
+      steel: 0,
+      plates: 0,
+      modules: 0,
+      circuits: 0,
+      frames: 0,
       wastedStone: 0,
       wastedWood: 0,
       wastedIron: 0,
+      wastedCoal: 0,
+      wastedCopper: 0,
+      wastedParts: 0,
+      wastedSteel: 0,
+      wastedPlates: 0,
+      wastedModules: 0,
+      wastedCircuits: 0,
+      wastedFrames: 0,
     },
     nodes: [
       { id: "warehouse-1", type: "warehouse", row: 3, col: 2, level: 1, fixed: true },
@@ -122,10 +186,17 @@ function createDefaultState() {
     nextMinerId: 2,
     nextWoodMinerId: 1,
     nextIronMinerId: 1,
+    nextCoalMinerId: 1,
+    nextCopperMinerId: 1,
+    nextForgeId: 1,
+    nextAssemblerId: 1,
     nextPoleId: 1,
     autoSellEnabled: false,
     tech: {
       ironUnlocked: false,
+      forgeUnlocked: false,
+      advancedMinesUnlocked: false,
+      assemblerUnlocked: false,
     },
     camera: {
       x: 0,
@@ -274,6 +345,22 @@ function ironMinerNodes() {
   return state.nodes.filter((node) => node.type === "iron_miner");
 }
 
+function coalMinerNodes() {
+  return state.nodes.filter((node) => node.type === "coal_miner");
+}
+
+function copperMinerNodes() {
+  return state.nodes.filter((node) => node.type === "copper_miner");
+}
+
+function forgeNodes() {
+  return state.nodes.filter((node) => node.type === "forge");
+}
+
+function assemblerNodes() {
+  return state.nodes.filter((node) => node.type === "assembler");
+}
+
 function poleNodes() {
   return state.nodes.filter((node) => node.type === "pole");
 }
@@ -288,6 +375,125 @@ function woodMinerRatePerSec(level) {
 
 function ironMinerRatePerSec(level) {
   return 0.55 * (1 + (level - 1) * 0.28);
+}
+
+function coalMinerRatePerSec(level) {
+  return 0.62 * (1 + (level - 1) * 0.27);
+}
+
+function copperMinerRatePerSec(level) {
+  return 0.52 * (1 + (level - 1) * 0.29);
+}
+
+function forgeRatePerSec(level) {
+  return 0.36 * (1 + (level - 1) * 0.24);
+}
+
+function assemblerRatePerSec(level) {
+  return 0.24 * (1 + (level - 1) * 0.23);
+}
+
+const PROCESSOR_NODE_TYPES = {
+  forge: {
+    defaultRecipeId: "forge_parts",
+    recipeIds: ["forge_parts", "forge_steel", "forge_plates"],
+    ratePerSec: forgeRatePerSec,
+  },
+  assembler: {
+    defaultRecipeId: "assembler_modules",
+    recipeIds: ["assembler_modules", "assembler_circuits", "assembler_frames"],
+    ratePerSec: assemblerRatePerSec,
+  },
+};
+
+const RECIPES = {
+  forge_parts: {
+    label: "Peces",
+    inputs: {
+      wood: CONFIG.forgeWoodPerUnit,
+      iron: CONFIG.forgeIronPerUnit,
+    },
+    outputs: {
+      parts: CONFIG.forgePartsPerUnit,
+    },
+  },
+  forge_steel: {
+    label: "Acer",
+    inputs: {
+      iron: CONFIG.forgeSteelIronPerUnit,
+      coal: CONFIG.forgeSteelCoalPerUnit,
+    },
+    outputs: {
+      steel: CONFIG.forgeSteelPerUnit,
+    },
+  },
+  forge_plates: {
+    label: "Plaques",
+    inputs: {
+      copper: CONFIG.forgePlatesCopperPerUnit,
+      coal: CONFIG.forgePlatesCoalPerUnit,
+    },
+    outputs: {
+      plates: CONFIG.forgePlatesPerUnit,
+    },
+  },
+  assembler_modules: {
+    label: "Moduls",
+    inputs: {
+      parts: CONFIG.assemblerPartsPerUnit,
+      plates: CONFIG.assemblerPlatesPerUnit,
+    },
+    outputs: {
+      modules: CONFIG.assemblerModulesPerUnit,
+    },
+  },
+  assembler_circuits: {
+    label: "Circuits",
+    inputs: {
+      parts: CONFIG.assemblerCircuitPartsPerUnit,
+      copper: CONFIG.assemblerCircuitCopperPerUnit,
+    },
+    outputs: {
+      circuits: CONFIG.assemblerCircuitsPerUnit,
+    },
+  },
+  assembler_frames: {
+    label: "Bastidors",
+    inputs: {
+      steel: CONFIG.assemblerFrameSteelPerUnit,
+      plates: CONFIG.assemblerFramePlatesPerUnit,
+    },
+    outputs: {
+      frames: CONFIG.assemblerFramesPerUnit,
+    },
+  },
+};
+
+function processorConfig(node) {
+  if (!node) return null;
+  return PROCESSOR_NODE_TYPES[node.type] || null;
+}
+
+function nodeRecipeId(node) {
+  const cfg = processorConfig(node);
+  if (!cfg) return null;
+
+  if (cfg.recipeIds.includes(node.recipeId)) {
+    return node.recipeId;
+  }
+
+  return cfg.defaultRecipeId;
+}
+
+function nodeRecipe(node) {
+  const recipeId = nodeRecipeId(node);
+  if (!recipeId) return null;
+  return RECIPES[recipeId] || null;
+}
+
+function nodeRecipeLabel(node) {
+  const recipe = nodeRecipe(node);
+  return recipe ? recipe.label : "-";
 }
 
 function capacity(warehouseLevel) {
@@ -314,12 +520,46 @@ function ironMinerPlacementCost() {
   );
 }
 
+function coalMinerPlacementCost() {
+  return Math.round(
+    CONFIG.coalMinerBaseCost * CONFIG.coalMinerCostScale ** coalMinerNodes().length
+  );
+}
+
+function copperMinerPlacementCost() {
+  return Math.round(
+    CONFIG.copperMinerBaseCost * CONFIG.copperMinerCostScale ** copperMinerNodes().length
+  );
+}
+
+function forgePlacementCost() {
+  return Math.round(CONFIG.forgeBaseCost * CONFIG.forgeCostScale ** forgeNodes().length);
+}
+
+function assemblerPlacementCost() {
+  return Math.round(
+    CONFIG.assemblerBaseCost * CONFIG.assemblerCostScale ** assemblerNodes().length
+  );
+}
+
 function polePlacementCost() {
   return Math.round(CONFIG.poleBaseCost * CONFIG.poleCostScale ** poleNodes().length);
 }
 
 function ironUnlockCost() {
   return CONFIG.ironUnlockCost;
+}
+
+function forgeUnlockCost() {
+  return CONFIG.forgeUnlockCost;
+}
+
+function advancedMinesUnlockCost() {
+  return CONFIG.advancedMinesUnlockCost;
+}
+
+function assemblerUnlockCost() {
+  return CONFIG.assemblerUnlockCost;
 }
 
 function nodeMaintenancePerSec(node) {
@@ -337,6 +577,22 @@ function nodeMaintenancePerSec(node) {
 
   if (node.type === "iron_miner") {
     return 0.19 * (1 + (node.level - 1) * 0.2);
+  }
+
+  if (node.type === "coal_miner") {
+    return 0.2 * (1 + (node.level - 1) * 0.2);
+  }
+
+  if (node.type === "copper_miner") {
+    return 0.22 * (1 + (node.level - 1) * 0.2);
+  }
+
+  if (node.type === "forge") {
+    return 0.24 * (1 + (node.level - 1) * 0.2);
+  }
+
+  if (node.type === "assembler") {
+    return 0.27 * (1 + (node.level - 1) * 0.2);
   }
 
   if (node.type === "market") {
@@ -384,6 +640,30 @@ function upgradeCost(node) {
     );
   }
 
+  if (node.type === "coal_miner") {
+    return Math.round(
+      (CONFIG.minerUpgradeBaseCost * 1.34) * CONFIG.minerUpgradeScale ** (node.level - 1)
+    );
+  }
+
+  if (node.type === "copper_miner") {
+    return Math.round(
+      (CONFIG.minerUpgradeBaseCost * 1.4) * CONFIG.minerUpgradeScale ** (node.level - 1)
+    );
+  }
+
+  if (node.type === "forge") {
+    return Math.round(
+      (CONFIG.minerUpgradeBaseCost * 1.45) * CONFIG.minerUpgradeScale ** (node.level - 1)
+    );
+  }
+
+  if (node.type === "assembler") {
+    return Math.round(
+      (CONFIG.minerUpgradeBaseCost * 1.6) * CONFIG.minerUpgradeScale ** (node.level - 1)
+    );
+  }
+
   if (node.type === "warehouse") {
     return Math.round(
       CONFIG.warehouseUpgradeBaseCost * CONFIG.warehouseUpgradeScale ** (node.level - 1)
@@ -414,9 +694,13 @@ function formatCompact(value) {
 }
 
 function formatNodeType(type) {
-  if (type === "miner") return "Miner";
+  if (type === "miner") return "Pedra";
   if (type === "wood_miner") return "Miner fusta";
   if (type === "iron_miner") return "Miner ferro";
+  if (type === "coal_miner") return "Miner carbo";
+  if (type === "copper_miner") return "Miner coure";
+  if (type === "forge") return "Farga";
+  if (type === "assembler") return "Assembler";
   if (type === "warehouse") return "Magatzem";
   if (type === "market") return "Mercat";
   if (type === "pole") return "Connector";
@@ -424,9 +708,13 @@ function formatNodeType(type) {
 }
 
 function tileLabel(node) {
-  if (node.type === "miner") return `M${node.level}`;
+  if (node.type === "miner") return `P${node.level}`;
   if (node.type === "wood_miner") return `Wd${node.level}`;
   if (node.type === "iron_miner") return `F${node.level}`;
+  if (node.type === "coal_miner") return `Ca${node.level}`;
+  if (node.type === "copper_miner") return `Cu${node.level}`;
+  if (node.type === "forge") return `Fg${node.level}`;
+  if (node.type === "assembler") return `As${node.level}`;
   if (node.type === "warehouse") return `W${node.level}`;
   if (node.type === "market") return `S${node.level}`;
   if (node.type === "pole") return "C";
@@ -434,11 +722,16 @@ function tileLabel(node) {
 }
 
 function modeLabel(mode) {
-  if (mode === "build_miner") return "Comprar: Miner";
+  if (mode === "build_miner") return "Comprar: Pedra";
   if (mode === "build_wood_miner") return "Comprar: Fusta";
   if (mode === "build_iron_miner") return "Comprar: Fe";
+  if (mode === "build_coal_miner") return "Comprar: Carbo";
+  if (mode === "build_copper_miner") return "Comprar: Coure";
+  if (mode === "build_forge") return "Comprar: Farga";
+  if (mode === "build_assembler") return "Comprar: Asm";
   if (mode === "build_pole") return "Comprar: Conn";
   if (mode === "connect") return "Cables";
+  if (mode === "disconnect") return "Tallar cable";
   return "Seleccio";
 }
 
@@ -577,6 +870,12 @@ function getNetworkSnapshot() {
   const connectedIronMiners = ironMinerNodes().filter((node) =>
     reachableFromWarehouse.has(node.id)
   );
+  const connectedCoalMiners = coalMinerNodes().filter((node) =>
+    reachableFromWarehouse.has(node.id)
+  );
+  const connectedCopperMiners = copperMinerNodes().filter((node) =>
+    reachableFromWarehouse.has(node.id)
+  );
   const stoneRate = connectedStoneMiners.reduce(
     (sum, miner) => sum + minerRatePerSec(miner.level),
     0
@@ -589,15 +888,48 @@ function getNetworkSnapshot() {
     (sum, miner) => sum + ironMinerRatePerSec(miner.level),
     0
   );
+  const coalRate = connectedCoalMiners.reduce(
+    (sum, miner) => sum + coalMinerRatePerSec(miner.level),
+    0
+  );
+  const copperRate = connectedCopperMiners.reduce(
+    (sum, miner) => sum + copperMinerRatePerSec(miner.level),
+    0
+  );
+  const processorRates = {};
+  for (const node of state.nodes) {
+    if (!reachableFromWarehouse.has(node.id)) continue;
+    const processor = PROCESSOR_NODE_TYPES[node.type];
+    if (!processor) continue;
+    const recipeId = nodeRecipeId(node);
+    if (!recipeId) continue;
+    const rate = processor.ratePerSec(node.level);
+    processorRates[recipeId] = (processorRates[recipeId] || 0) + rate;
+  }
+
+  const processingRate = Object.values(processorRates).reduce((sum, rate) => sum + rate, 0);
+  const forgeRate =
+    (processorRates.forge_parts || 0) +
+    (processorRates.forge_steel || 0) +
+    (processorRates.forge_plates || 0);
+  const assemblerRate =
+    (processorRates.assembler_modules || 0) +
+    (processorRates.assembler_circuits || 0) +
+    (processorRates.assembler_frames || 0);
 
   return {
     warehouseNode,
     marketNode,
     reachableFromWarehouse,
-    connectedRate: stoneRate + woodRate + ironRate,
+    connectedRate: stoneRate + woodRate + ironRate + coalRate + copperRate + processingRate,
     stoneRate,
     woodRate,
     ironRate,
+    coalRate,
+    copperRate,
+    forgeRate,
+    assemblerRate,
+    processorRates,
     marketConnected: !!(marketNode && reachableFromWarehouse.has(marketNode.id)),
     nodeMap: new Map(state.nodes.map((node) => [node.id, node])),
   };
@@ -622,6 +954,54 @@ function resourceCatalog() {
       label: "Ferro",
       price: CONFIG.ironPrice,
       unlocked: state.tech.ironUnlocked,
+    },
+    {
+      key: "coal",
+      label: "Carbo",
+      price: CONFIG.coalPrice,
+      unlocked: state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "copper",
+      label: "Coure",
+      price: CONFIG.copperPrice,
+      unlocked: state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "parts",
+      label: "Peces",
+      price: CONFIG.partsPrice,
+      unlocked: state.tech.forgeUnlocked,
+    },
+    {
+      key: "steel",
+      label: "Acer",
+      price: CONFIG.steelPrice,
+      unlocked: state.tech.forgeUnlocked && state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "plates",
+      label: "Plaques",
+      price: CONFIG.platesPrice,
+      unlocked: state.tech.forgeUnlocked && state.tech.advancedMinesUnlocked,
+    },
+    {
+      key: "modules",
+      label: "Moduls",
+      price: CONFIG.modulesPrice,
+      unlocked: state.tech.assemblerUnlocked,
+    },
+    {
+      key: "circuits",
+      label: "Circuits",
+      price: CONFIG.circuitsPrice,
+      unlocked: state.tech.assemblerUnlocked,
+    },
+    {
+      key: "frames",
+      label: "Bastidors",
+      price: CONFIG.framesPrice,
+      unlocked: state.tech.assemblerUnlocked,
     },
   ];
 }
@@ -661,6 +1041,77 @@ function sellResources(units = Number.POSITIVE_INFINITY) {
   return { sold, earned };
 }
 
+function wasteKeyFor(resourceKey) {
+  return `wasted${resourceKey.charAt(0).toUpperCase()}${resourceKey.slice(1)}`;
+}
+
+function recipeOutputPerScale(recipe) {
+  return Object.values(recipe.outputs).reduce((sum, amount) => sum + amount, 0);
+}
+
+function maxRecipeScaleByInputs(recipe, wantedScale) {
+  let maxScale = wantedScale;
+
+  for (const [resourceKey, amountPerScale] of Object.entries(recipe.inputs)) {
+    if (amountPerScale <= 0) continue;
+    const available = Math.max(0, state.resources[resourceKey] || 0);
+    maxScale = Math.min(maxScale, available / amountPerScale);
+  }
+
+  return Math.max(0, maxScale);
+}
+
+function processRecipeScale(recipe, wantedScale, freeCapacity) {
+  if (!recipe || wantedScale <= 0) return freeCapacity;
+
+  const byInputsScale = maxRecipeScaleByInputs(recipe, wantedScale);
+  if (byInputsScale <= 0) return freeCapacity;
+
+  const outputPerScale = recipeOutputPerScale(recipe);
+  if (outputPerScale <= 0) return freeCapacity;
+
+  const byCapacityScale = Math.max(0, freeCapacity / outputPerScale);
+  const finalScale = Math.max(0, Math.min(byInputsScale, byCapacityScale));
+
+  if (finalScale > 0) {
+    for (const [resourceKey, amountPerScale] of Object.entries(recipe.inputs)) {
+      const nextAmount = (state.resources[resourceKey] || 0) - amountPerScale * finalScale;
+      state.resources[resourceKey] = Math.max(0, nextAmount);
+    }
+
+    for (const [resourceKey, amountPerScale] of Object.entries(recipe.outputs)) {
+      state.resources[resourceKey] = (state.resources[resourceKey] || 0) + amountPerScale * finalScale;
+    }
+  }
+
+  const missedScale = Math.max(0, byInputsScale - finalScale);
+  if (missedScale > 0) {
+    for (const [resourceKey, amountPerScale] of Object.entries(recipe.outputs)) {
+      const wastedKey = wasteKeyFor(resourceKey);
+      const wastedAmount = amountPerScale * missedScale;
+      state.resources[wastedKey] = (state.resources[wastedKey] || 0) + wastedAmount;
+    }
+  }
+
+  const usedCapacity = outputPerScale * finalScale;
+  return Math.max(0, freeCapacity - usedCapacity);
+}
+
+function processConnectedRecipes(snapshot, dtSec, freeCapacity) {
+  let free = freeCapacity;
+  const recipeRates = snapshot.processorRates || {};
+
+  for (const [recipeId, ratePerSec] of Object.entries(recipeRates)) {
+    if (ratePerSec <= 0) continue;
+    const recipe = RECIPES[recipeId];
+    if (!recipe) continue;
+    const wantedScale = ratePerSec * dtSec;
+    free = processRecipeScale(recipe, wantedScale, free);
+  }
+
+  return free;
+}
+
 function gameTick(dtSec) {
   updateContractTick();
   const snapshot = getNetworkSnapshot();
@@ -695,6 +1146,23 @@ function gameTick(dtSec) {
   const lostIron = producedIron - storedIron;
   state.resources.iron += storedIron;
   state.resources.wastedIron += lostIron;
+  free = Math.max(0, free - storedIron);
+
+  const producedCoal = snapshot.coalRate * dtSec;
+  const storedCoal = Math.min(producedCoal, free);
+  const lostCoal = producedCoal - storedCoal;
+  state.resources.coal += storedCoal;
+  state.resources.wastedCoal += lostCoal;
+  free = Math.max(0, free - storedCoal);
+
+  const producedCopper = snapshot.copperRate * dtSec;
+  const storedCopper = Math.min(producedCopper, free);
+  const lostCopper = producedCopper - storedCopper;
+  state.resources.copper += storedCopper;
+  state.resources.wastedCopper += lostCopper;
+  free = Math.max(0, free - storedCopper);
+
+  free = processConnectedRecipes(snapshot, dtSec, free);
 
   if (state.autoSellEnabled && snapshot.marketConnected && snapshot.marketNode) {
     const autoSellUnits = Math.min(
@@ -743,14 +1211,40 @@ function setBuildType(type) {
     return;
   }
 
+  if (
+    (type === "coal_miner" || type === "copper_miner") &&
+    !state.tech.advancedMinesUnlocked
+  ) {
+    showToast("Desbloqueja mines avancades");
+    return;
+  }
+
+  if (type === "forge" && !state.tech.forgeUnlocked) {
+    showToast("Desbloqueja farga a Tech");
+    return;
+  }
+
+  if (type === "assembler" && !state.tech.assemblerUnlocked) {
+    showToast("Desbloqueja assembler a Tech");
+    return;
+  }
+
   state.ui.buyType = type;
   if (
     state.ui.mode === "build_miner" ||
     state.ui.mode === "build_wood_miner" ||
     state.ui.mode === "build_iron_miner" ||
+    state.ui.mode === "build_coal_miner" ||
+    state.ui.mode === "build_copper_miner" ||
+    state.ui.mode === "build_forge" ||
+    state.ui.mode === "build_assembler" ||
     state.ui.mode === "build_pole"
   ) {
     if (type === "pole") setMode("build_pole");
+    else if (type === "assembler") setMode("build_assembler");
+    else if (type === "forge") setMode("build_forge");
+    else if (type === "copper_miner") setMode("build_copper_miner");
+    else if (type === "coal_miner") setMode("build_coal_miner");
     else if (type === "wood_miner") setMode("build_wood_miner");
     else if (type === "iron_miner") setMode("build_iron_miner");
     else setMode("build_miner");
@@ -765,6 +1259,26 @@ function enterBuyMode() {
 
   if (state.ui.buyType === "wood_miner") {
     setMode("build_wood_miner");
+    return;
+  }
+
+  if (state.ui.buyType === "assembler" && state.tech.assemblerUnlocked) {
+    setMode("build_assembler");
+    return;
+  }
+
+  if (state.ui.buyType === "forge" && state.tech.forgeUnlocked) {
+    setMode("build_forge");
+    return;
+  }
+
+  if (state.ui.buyType === "copper_miner" && state.tech.advancedMinesUnlocked) {
+    setMode("build_copper_miner");
+    return;
+  }
+
+  if (state.ui.buyType === "coal_miner" && state.tech.advancedMinesUnlocked) {
+    setMode("build_coal_miner");
     return;
   }
 
@@ -793,7 +1307,7 @@ function placeNode(type, row, col) {
     state.nextMinerId += 1;
     state.nodes.push({ id, type: "miner", row, col, level: 1, fixed: false });
     state.ui.selectedNodeId = id;
-    showToast("Miner colocat");
+    showToast("Pedra colocada");
     return;
   }
 
@@ -832,6 +1346,102 @@ function placeNode(type, row, col) {
     return;
   }
 
+  if (type === "coal_miner") {
+    if (!state.tech.advancedMinesUnlocked) {
+      showToast("Mines avancades no desbloquejades");
+      return;
+    }
+
+    const cost = coalMinerPlacementCost();
+    if (!spendMoney(cost)) {
+      showToast("No tens prou diners");
+      return;
+    }
+
+    const id = `coal-miner-${state.nextCoalMinerId}`;
+    state.nextCoalMinerId += 1;
+    state.nodes.push({ id, type: "coal_miner", row, col, level: 1, fixed: false });
+    state.ui.selectedNodeId = id;
+    showToast("Miner carbo colocat");
+    return;
+  }
+
+  if (type === "copper_miner") {
+    if (!state.tech.advancedMinesUnlocked) {
+      showToast("Mines avancades no desbloquejades");
+      return;
+    }
+
+    const cost = copperMinerPlacementCost();
+    if (!spendMoney(cost)) {
+      showToast("No tens prou diners");
+      return;
+    }
+
+    const id = `copper-miner-${state.nextCopperMinerId}`;
+    state.nextCopperMinerId += 1;
+    state.nodes.push({ id, type: "copper_miner", row, col, level: 1, fixed: false });
+    state.ui.selectedNodeId = id;
+    showToast("Miner coure colocat");
+    return;
+  }
+
+  if (type === "forge") {
+    if (!state.tech.forgeUnlocked) {
+      showToast("Farga no desbloquejada");
+      return;
+    }
+
+    const cost = forgePlacementCost();
+    if (!spendMoney(cost)) {
+      showToast("No tens prou diners");
+      return;
+    }
+
+    const id = `forge-${state.nextForgeId}`;
+    state.nextForgeId += 1;
+    state.nodes.push({
+      id,
+      type: "forge",
+      row,
+      col,
+      level: 1,
+      recipeId: PROCESSOR_NODE_TYPES.forge.defaultRecipeId,
+      fixed: false,
+    });
+    state.ui.selectedNodeId = id;
+    showToast("Farga colocada");
+    return;
+  }
+
+  if (type === "assembler") {
+    if (!state.tech.assemblerUnlocked) {
+      showToast("Assembler no desbloquejat");
+      return;
+    }
+
+    const cost = assemblerPlacementCost();
+    if (!spendMoney(cost)) {
+      showToast("No tens prou diners");
+      return;
+    }
+
+    const id = `assembler-${state.nextAssemblerId}`;
+    state.nextAssemblerId += 1;
+    state.nodes.push({
+      id,
+      type: "assembler",
+      row,
+      col,
+      level: 1,
+      recipeId: PROCESSOR_NODE_TYPES.assembler.defaultRecipeId,
+      fixed: false,
+    });
+    state.ui.selectedNodeId = id;
+    showToast("Assembler colocat");
+    return;
+  }
+
   if (type === "pole") {
     const cost = polePlacementCost();
     if (!spendMoney(cost)) {
@@ -862,7 +1472,7 @@ function canCreateCable(source, target) {
   return true;
 }
 
-function toggleCable(aId, bId) {
+function addCableBetween(aId, bId) {
   if (aId === bId) return;
 
   const source = getNodeById(aId);
@@ -873,8 +1483,7 @@ function toggleCable(aId, bId) {
   const idx = state.cables.indexOf(key);
 
   if (idx >= 0) {
-    state.cables.splice(idx, 1);
-    showToast("Cable eliminat");
+    showToast("Ja estan connectats");
     return;
   }
 
@@ -884,6 +1493,28 @@ function toggleCable(aId, bId) {
 
   state.cables.push(key);
   showToast(`Cable +${CONFIG.cableCost}$`);
+}
+
+function removeCableBetween(aId, bId) {
+  if (aId === bId) return;
+
+  const key = edgeKey(aId, bId);
+  const idx = state.cables.indexOf(key);
+  if (idx < 0) {
+    showToast("No hi ha cable");
+    return;
+  }
+
+  state.cables.splice(idx, 1);
+  showToast("Cable eliminat");
+}
+
+function applyCableAction(aId, bId) {
+  if (state.ui.mode === "disconnect") {
+    removeCableBetween(aId, bId);
+    return;
+  }
+  addCableBetween(aId, bId);
 }
 
 function onGridTap(row, col) {
@@ -907,13 +1538,37 @@ function onGridTap(row, col) {
     return;
   }
 
+  if (state.ui.mode === "build_coal_miner") {
+    placeNode("coal_miner", row, col);
+    render();
+    return;
+  }
+
+  if (state.ui.mode === "build_copper_miner") {
+    placeNode("copper_miner", row, col);
+    render();
+    return;
+  }
+
+  if (state.ui.mode === "build_forge") {
+    placeNode("forge", row, col);
+    render();
+    return;
+  }
+
+  if (state.ui.mode === "build_assembler") {
+    placeNode("assembler", row, col);
+    render();
+    return;
+  }
+
   if (state.ui.mode === "build_pole") {
     placeNode("pole", row, col);
     render();
     return;
   }
 
-  if (state.ui.mode === "connect") {
+  if (state.ui.mode === "connect" || state.ui.mode === "disconnect") {
     if (!node) {
       return;
     }
@@ -933,7 +1588,7 @@ function onGridTap(row, col) {
       return;
     }
 
-    toggleCable(state.ui.pendingSourceId, node.id);
+    applyCableAction(state.ui.pendingSourceId, node.id);
     state.ui.selectedNodeId = node.id;
     state.ui.pendingSourceId = node.id;
     render();
@@ -947,6 +1602,39 @@ function onGridTap(row, col) {
 
 function selectedNode() {
   return getNodeById(state.ui.selectedNodeId);
+}
+
+function canCycleRecipe(node) {
+  const cfg = processorConfig(node);
+  return !!(cfg && cfg.recipeIds.length > 1);
+}
+
+function cycleSelectedRecipe() {
+  const node = selectedNode();
+  if (!node) {
+    showToast("Selecciona una maquina");
+    return;
+  }
+
+  const cfg = processorConfig(node);
+  if (!cfg) {
+    showToast("Aquest node no te receptes");
+    return;
+  }
+
+  if (cfg.recipeIds.length <= 1) {
+    showToast("Nomes hi ha una recepta");
+    return;
+  }
+
+  const currentId = nodeRecipeId(node);
+  const currentIndex = cfg.recipeIds.indexOf(currentId);
+  const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % cfg.recipeIds.length : 0;
+  const nextId = cfg.recipeIds[nextIndex];
+  node.recipeId = nextId;
+  const label = RECIPES[nextId]?.label || nextId;
+  showToast(`Recepta: ${label}`);
+  render();
 }
 
 function upgradeSelected() {
@@ -986,7 +1674,7 @@ function removeSelectedNode() {
     }
 
     if (node.type === "miner") {
-      showToast("Has de mantenir almenys 1 miner");
+      showToast("Has de mantenir almenys 1 pedra");
       return;
     }
 
@@ -1043,23 +1731,69 @@ function sellAllResources() {
   return sellResourceUnits(units);
 }
 
-function unlockIronTechnology() {
-  if (state.tech.ironUnlocked) {
-    showToast("Ferro ja desbloquejat");
+function nextTechnologyToUnlock() {
+  if (!state.tech.ironUnlocked) {
+    return {
+      key: "ironUnlocked",
+      label: "Fe",
+      cost: ironUnlockCost(),
+      toast: "Tecnologia ferro desbloquejada",
+    };
+  }
+
+  if (!state.tech.forgeUnlocked) {
+    return {
+      key: "forgeUnlocked",
+      label: "Farga",
+      cost: forgeUnlockCost(),
+      toast: "Tecnologia farga desbloquejada",
+    };
+  }
+
+  if (!state.tech.advancedMinesUnlocked) {
+    return {
+      key: "advancedMinesUnlocked",
+      label: "Mines+",
+      cost: advancedMinesUnlockCost(),
+      toast: "Mines avancades desbloquejades",
+    };
+  }
+
+  if (!state.tech.assemblerUnlocked) {
+    return {
+      key: "assemblerUnlocked",
+      label: "Asm",
+      cost: assemblerUnlockCost(),
+      toast: "Tecnologia assembler desbloquejada",
+    };
+  }
+
+  return null;
+}
+
+function unlockNextTechnology() {
+  const next = nextTechnologyToUnlock();
+  if (!next) {
+    showToast("No hi ha mes tecnologia");
     return;
   }
 
-  const cost = ironUnlockCost();
-  if (!spendMoney(cost)) {
+  if (!spendMoney(next.cost)) {
     showToast("No tens prou diners per Tech");
     return;
   }
 
-  state.tech.ironUnlocked = true;
-  if (state.ui.buyType === "iron_miner") {
+  state.tech[next.key] = true;
+  if (
+    state.ui.buyType === "iron_miner" ||
+    state.ui.buyType === "coal_miner" ||
+    state.ui.buyType === "copper_miner" ||
+    state.ui.buyType === "forge" ||
+    state.ui.buyType === "assembler"
+  ) {
     enterBuyMode();
   }
-  showToast("Tecnologia ferro desbloquejada");
+  showToast(next.toast);
   render();
 }
 
@@ -1249,7 +1983,7 @@ function updateDragPointer(clientX, clientY) {
 }
 
 function beginDragConnect(row, col, event) {
-  if (state.ui.mode !== "connect") return false;
+  if (state.ui.mode !== "connect" && state.ui.mode !== "disconnect") return false;
 
   const node = getNodeAt(row, col);
   if (!node) return false;
@@ -1282,7 +2016,7 @@ function finishDragConnect(event) {
   }
 
   if (sourceId && targetNode && targetNode.id !== sourceId) {
-    toggleCable(sourceId, targetNode.id);
+    applyCableAction(sourceId, targetNode.id);
     state.ui.selectedNodeId = targetNode.id;
     state.ui.pendingSourceId = targetNode.id;
   }
@@ -1407,6 +2141,8 @@ function render() {
   const maxCapacity = warehouse ? capacity(warehouse.level) : 0;
   const totalStored = totalStoredResources();
   const selectedCost = selected ? upgradeCost(selected) : null;
+  const selectedRecipe = selected ? nodeRecipeLabel(selected) : "-";
+  const canChangeRecipe = canCycleRecipe(selected);
   clampCamera();
   applyCameraTransform();
 
@@ -1419,6 +2155,18 @@ function render() {
   dom.ironMinerCostValue.textContent = state.tech.ironUnlocked
     ? `${formatInt(ironMinerPlacementCost())}$`
     : "Bloc";
+  dom.coalMinerCostValue.textContent = state.tech.advancedMinesUnlocked
+    ? `${formatInt(coalMinerPlacementCost())}$`
+    : "Bloc";
+  dom.copperMinerCostValue.textContent = state.tech.advancedMinesUnlocked
+    ? `${formatInt(copperMinerPlacementCost())}$`
+    : "Bloc";
+  dom.forgeCostValue.textContent = state.tech.forgeUnlocked
+    ? `${formatInt(forgePlacementCost())}$`
+    : "Bloc";
+  dom.assemblerCostValue.textContent = state.tech.assemblerUnlocked
+    ? `${formatInt(assemblerPlacementCost())}$`
+    : "Bloc";
   dom.poleCostValue.textContent = `${formatInt(polePlacementCost())}$`;
   dom.cableCostValue.textContent = `${formatInt(CONFIG.cableCost)}$`;
   dom.cableRangeValue.textContent = `${formatCompact(CONFIG.cableMaxDistance)} cel.les`;
@@ -1426,33 +2174,49 @@ function render() {
   dom.maintenanceValue.textContent = `${formatCompact(state.economy.lastMaintenancePerSec)}$/s`;
   dom.modeLabel.textContent = modeLabel(state.ui.mode);
   dom.toggleAutoSellBtn.textContent = state.autoSellEnabled ? "Auto Tot ON" : "Auto Tot OFF";
-  dom.techUnlockIronBtn.textContent = state.tech.ironUnlocked
-    ? "Tech Fe OK"
-    : `Tech Fe ${formatInt(ironUnlockCost())}$`;
+  const nextTech = nextTechnologyToUnlock();
+  dom.techUnlockIronBtn.textContent = nextTech
+    ? `Tech ${nextTech.label} ${formatInt(nextTech.cost)}$`
+    : "Tech OK";
 
   const inBuyMode =
     state.ui.mode === "build_miner" ||
     state.ui.mode === "build_wood_miner" ||
     state.ui.mode === "build_iron_miner" ||
+    state.ui.mode === "build_coal_miner" ||
+    state.ui.mode === "build_copper_miner" ||
+    state.ui.mode === "build_forge" ||
+    state.ui.mode === "build_assembler" ||
     state.ui.mode === "build_pole";
   dom.toolBuyModeBtn.classList.toggle("active", inBuyMode);
   dom.toolCableModeBtn.classList.toggle("active", state.ui.mode === "connect");
+  dom.toolCableDeleteModeBtn.classList.toggle("active", state.ui.mode === "disconnect");
   dom.toolInspectModeBtn.classList.toggle("active", state.ui.mode === "inspect");
   dom.buyMinerTypeBtn.classList.toggle("active", state.ui.buyType === "miner");
   dom.buyWoodMinerTypeBtn.classList.toggle("active", state.ui.buyType === "wood_miner");
   dom.buyIronMinerTypeBtn.classList.toggle("active", state.ui.buyType === "iron_miner");
+  dom.buyCoalMinerTypeBtn.classList.toggle("active", state.ui.buyType === "coal_miner");
+  dom.buyCopperMinerTypeBtn.classList.toggle("active", state.ui.buyType === "copper_miner");
+  dom.buyForgeTypeBtn.classList.toggle("active", state.ui.buyType === "forge");
+  dom.buyAssemblerTypeBtn.classList.toggle("active", state.ui.buyType === "assembler");
   dom.buyPoleTypeBtn.classList.toggle("active", state.ui.buyType === "pole");
 
   dom.selectedTypeValue.textContent = selected ? formatNodeType(selected.type) : "-";
   dom.selectedLevelValue.textContent = selected ? formatInt(selected.level) : "-";
   dom.selectedUpgradeCostValue.textContent =
     selectedCost !== null ? `${formatInt(selectedCost)}$` : "-";
+  dom.selectedRecipeValue.textContent = selectedRecipe;
 
   dom.toolUpgradeBtn.disabled = !selected || selectedCost === null || state.money < selectedCost;
+  dom.toolRecipeBtn.disabled = !selected || !canChangeRecipe;
   dom.toolDeleteBtn.disabled = !isRemovableNode(selected);
   dom.toolSellBtn.disabled = totalStored < 1;
-  dom.techUnlockIronBtn.disabled = state.tech.ironUnlocked || state.money < ironUnlockCost();
+  dom.techUnlockIronBtn.disabled = !nextTech || state.money < nextTech.cost;
   dom.buyIronMinerTypeBtn.disabled = !state.tech.ironUnlocked;
+  dom.buyCoalMinerTypeBtn.disabled = !state.tech.advancedMinesUnlocked;
+  dom.buyCopperMinerTypeBtn.disabled = !state.tech.advancedMinesUnlocked;
+  dom.buyForgeTypeBtn.disabled = !state.tech.forgeUnlocked;
+  dom.buyAssemblerTypeBtn.disabled = !state.tech.assemblerUnlocked;
   dom.sell10Btn.disabled = totalStored < 1;
   dom.sellAllBtn.disabled = totalStored < 1;
   dom.acceptContractBtn.disabled = !state.contract.offer || !!state.contract.active;
@@ -1513,7 +2277,7 @@ function bindEvents() {
     pointerState.startCameraX = state.camera.x;
     pointerState.startCameraY = state.camera.y;
 
-    if (state.ui.mode !== "connect") return;
+    if (state.ui.mode !== "connect" && state.ui.mode !== "disconnect") return;
 
     const touchedCell = getCellFromPointer(event.clientX, event.clientY);
     if (!touchedCell) return;
@@ -1628,6 +2392,11 @@ function bindEvents() {
     render();
   });
 
+  dom.toolCableDeleteModeBtn.addEventListener("click", () => {
+    setMode("disconnect");
+    render();
+  });
+
   dom.toolInspectModeBtn.addEventListener("click", () => {
     setMode("inspect");
     render();
@@ -1645,6 +2414,26 @@ function bindEvents() {
 
   dom.buyIronMinerTypeBtn.addEventListener("click", () => {
     setBuildType("iron_miner");
+    render();
+  });
+
+  dom.buyCoalMinerTypeBtn.addEventListener("click", () => {
+    setBuildType("coal_miner");
+    render();
+  });
+
+  dom.buyCopperMinerTypeBtn.addEventListener("click", () => {
+    setBuildType("copper_miner");
+    render();
+  });
+
+  dom.buyForgeTypeBtn.addEventListener("click", () => {
+    setBuildType("forge");
+    render();
+  });
+
+  dom.buyAssemblerTypeBtn.addEventListener("click", () => {
+    setBuildType("assembler");
     render();
   });
 
@@ -1670,6 +2459,10 @@ function bindEvents() {
     upgradeSelected();
   });
 
+  dom.toolRecipeBtn.addEventListener("click", () => {
+    cycleSelectedRecipe();
+  });
+
   dom.toolDeleteBtn.addEventListener("click", () => {
     removeSelectedNode();
   });
@@ -1679,7 +2472,7 @@ function bindEvents() {
   });
 
   dom.techUnlockIronBtn.addEventListener("click", () => {
-    unlockIronTechnology();
+    unlockNextTechnology();
   });
 
   dom.resourceStrip.addEventListener("click", (event) => {

@@ -47,22 +47,36 @@
       <div class="tool-row mode-row">
         <button id="toolBuyModeBtn">Comprar</button>
         <button id="toolCableModeBtn">Cables</button>
+        <button id="toolCableDeleteModeBtn">Tallar</button>
         <button id="toolInspectModeBtn">Selec</button>
       </div>
       <div class="tool-row action-row">
         <button id="toolUpgradeBtn">Upgrade</button>
+        <button id="toolRecipeBtn">Recepta</button>
         <button id="toolSellBtn">Vendre</button>
         <button id="toolDeleteBtn">Borrar</button>
         <button id="techUnlockIronBtn">Tech</button>
       </div>
       <div class="buy-picker">
-        <button id="buyMinerTypeBtn">Miner</button>
+        <span class="buy-title">Recursos</span>
+        <button id="buyMinerTypeBtn">Pedra</button>
         <button id="buyWoodMinerTypeBtn">Fusta</button>
         <button id="buyIronMinerTypeBtn">Fe</button>
-        <button id="buyPoleTypeBtn">Conn</button>
-        <span>M: <strong id="minerCostValue">0$</strong></span>
+        <button id="buyCoalMinerTypeBtn">Carb</button>
+        <button id="buyCopperMinerTypeBtn">Cu</button>
+        <span>P: <strong id="minerCostValue">0$</strong></span>
         <span>Fu: <strong id="woodMinerCostValue">0$</strong></span>
         <span>Fe: <strong id="ironMinerCostValue">-</strong></span>
+        <span>Ca: <strong id="coalMinerCostValue">-</strong></span>
+        <span>Cu: <strong id="copperMinerCostValue">-</strong></span>
+      </div>
+      <div class="buy-picker">
+        <span class="buy-title">Maquines</span>
+        <button id="buyForgeTypeBtn">Farga</button>
+        <button id="buyAssemblerTypeBtn">Asm</button>
+        <button id="buyPoleTypeBtn">Conn</button>
+        <span>Fg: <strong id="forgeCostValue">-</strong></span>
+        <span>As: <strong id="assemblerCostValue">-</strong></span>
         <span>Cn: <strong id="poleCostValue">0$</strong></span>
       </div>
       <div class="quick-info">
@@ -75,6 +89,7 @@
         <span>Tip <strong id="selectedTypeValue">-</strong></span>
         <span>Nv <strong id="selectedLevelValue">-</strong></span>
         <span>Up <strong id="selectedUpgradeCostValue">-</strong></span>
+        <span>Rc <strong id="selectedRecipeValue">-</strong></span>
       </div>
       <div class="actions compact">
         <button id="toggleAutoSellBtn">Auto Tot OFF</button>

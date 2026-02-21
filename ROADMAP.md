@@ -58,3 +58,11 @@ Construir un joc web d'automatitzacio on el jugador crea una xarxa de maquines, 
 1. Passar de toggles a connexions per mapa (drag and connect).
 2. Afegir sistema d'events (bonus temporal, avaries).
 3. Fer balance pass amb tests de simulacio (5 min, 30 min, 2 h).
+
+## Llista Curta (2026-02-21)
+- [x] Separar compra en `Recursos` i `Maquines`.
+- [x] Afegir mode explicit per tallar/esborrar cables.
+- [x] Afegir mes receptes a `Assembler` (selector de recepta).
+- [ ] Ajustar balance de preus/produccio de la nova cadena.
+- [ ] Contractes multi-recurs (no nomes pedra).
+- [ ] Filtre visual de flux per tipus de recurs.

@@ -24,8 +24,15 @@ Despres visita `http://localhost:5500`.
 - Barra d'eines principal: comprar, cables, seleccio, upgrade, vendre i borrar.
 - Tecnologia per desbloquejar `ferro` i compra de `miner ferro`.
 - Nou recurs `fusta` amb `miner fusta` des del principi.
+- `Farga` desbloquejable que combina recursos amb recepta i produeix `peces`.
+- Selector de recepta per maquina (ex. `Farga`: Peces/Acer/Plaques).
+- Nous recursos base `carbo` i `coure` amb miners propis.
+- Nova maquina `Assembler` que consumeix `peces` i `plaques` per crear `moduls`.
+- `Assembler` amb receptes multiples (`Moduls`, `Circuits`, `Bastidors`).
+- Compra separada visualment en seccions de `Recursos` i `Maquines`.
 - Venda manual i auto-venda unificada per tots els recursos.
 - Connexio per drag tactile (`Mode Cable`) i per taps.
+- Mode `Tallar` per eliminar cables explicitament.
 - Snap assistit en drag per facilitar connexions amb el dit.
 - Cables amb cost economic i distancia maxima.
 - Nou item `connector` per construir rutes.

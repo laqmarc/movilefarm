@@ -303,6 +303,22 @@ h2 {
   background: linear-gradient(145deg, #4f6d8b, #3b536d);
 }
 
+.tile.coal_miner {
+  background: linear-gradient(145deg, #55595f, #3d4146);
+}
+
+.tile.copper_miner {
+  background: linear-gradient(145deg, #aa6746, #8d5136);
+}
+
+.tile.forge {
+  background: linear-gradient(145deg, #7a4b58, #5b3841);
+}
+
+.tile.assembler {
+  background: linear-gradient(145deg, #4a6a92, #344f70);
+}
+
 .tile.warehouse {
   background: linear-gradient(145deg, #7a6a3a, #5d512c);
 }
@@ -383,7 +399,11 @@ h2 {
 }
 
 .mode-row {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.action-row {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .buy-picker {
@@ -409,6 +429,18 @@ h2 {
   min-height: 36px;
   padding: 6px 10px;
   border-radius: 9px;
+}
+
+.buy-title {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(45, 106, 79, 0.2);
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 800;
 }
 
 .quick-info {
@@ -479,6 +511,14 @@ button:disabled {
 
 #techUnlockIronBtn:hover:not(:disabled) {
   background: #8f7739;
+}
+
+#toolCableDeleteModeBtn {
+  background: #805143;
+}
+
+#toolCableDeleteModeBtn:hover:not(:disabled) {
+  background: #965d4c;
 }
 
 .badge {
@@ -567,5 +607,9 @@ button:disabled {
 
   .quick-info {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
